@@ -22,6 +22,18 @@ GuitarCrusherAudioProcessor::GuitarCrusherAudioProcessor()
                        )
 #endif
 {
+    // initialize default values
+    bitVal = 0;
+    gainVal = 1.0f;
+    downSampleVal = 1;
+    drywetPercentageVal = 100;
+    gainSwitch = true;
+    bitSwitch = true;
+    downSampleSwitch = true;
+    distSwitch = true;
+    inputVal = 1;
+    outputVal = 1;
+    // i dont like this initialization
 }
 
 GuitarCrusherAudioProcessor::~GuitarCrusherAudioProcessor()
@@ -144,17 +156,37 @@ void GuitarCrusherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            float tmp = channelData[sample];
-            tmp *= Decibels::decibelsToGain(gainVal);
-            tmp *= pow(10, bitVal);
-            tmp = roundf(tmp);
-            tmp /= pow(10, bitVal);
-            channelData[sample] = tmp;
-            int stepIndex = sample%int(buffer.getNumSamples()*pow(1.08, downSampleVal)/100);
-            if (stepIndex != 0)
+            float toProcessVal, backupVal, finalVal;
+            channelData[sample] *= inputVal;
+            toProcessVal = backupVal = finalVal = channelData[sample];
+
+            if (gainSwitch)
             {
-                channelData[sample] = channelData[sample - stepIndex];
+                toProcessVal *= Decibels::decibelsToGain(gainVal);
             }
+            
+            if (distSwitch)
+            {
+                toProcessVal = tanh(2/M_PI * atan(distVal*toProcessVal));
+            }
+            
+            if (bitSwitch)
+            {
+                toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-bitVal)+1)));
+            }
+            
+            finalVal = toProcessVal;
+            
+            if (downSampleSwitch)
+            {
+                int stepIndex = sample%int(buffer.getNumSamples()*pow(1.08, downSampleVal)/100);
+                if (stepIndex != 0)
+                {
+                    finalVal = channelData[sample - stepIndex];
+                }
+            }
+                        
+            channelData[sample] = outputVal*(finalVal*(drywetPercentageVal/100)+backupVal*(1-drywetPercentageVal/100));
         }
     }
 }

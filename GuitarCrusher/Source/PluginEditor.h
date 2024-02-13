@@ -10,13 +10,15 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include <BinaryData.h>
 
 using juce::Slider;
+using juce::ToggleButton;
 
 //==============================================================================
 /**
 */
-class GuitarCrusherAudioProcessorEditor  : public juce::AudioProcessorEditor, public Slider::Listener
+class GuitarCrusherAudioProcessorEditor  : public juce::AudioProcessorEditor, public Slider::Listener, public Button::Listener
 {
 public:
     GuitarCrusherAudioProcessorEditor (GuitarCrusherAudioProcessor&);
@@ -25,7 +27,8 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
-    void sliderValueChanged(Slider *slider) override;
+    void sliderValueChanged(Slider*) override;
+    void buttonClicked(Button*) override;
 
 private:
     // This reference is provided as a quick way for your editor to
@@ -33,8 +36,18 @@ private:
     GuitarCrusherAudioProcessor& audioProcessor;
     
     Slider gainSlider;
+    Slider distSlider;
     Slider bitSlider;
     Slider downSampleSlider;
+    Slider drywetSlider;
+    
+    Slider inputSlider;
+    Slider outputSlider;
+    
+    ToggleButton gainButton;
+    ToggleButton distButton;
+    ToggleButton crushButton;
+    ToggleButton downSampleButton;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarCrusherAudioProcessorEditor)
 };

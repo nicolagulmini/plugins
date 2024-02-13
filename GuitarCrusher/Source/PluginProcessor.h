@@ -57,9 +57,19 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    float gainVal {0.0f};
-    int bitVal {32};
-    int downSampleVal {1};
+    float inputVal;
+    float outputVal;
+    
+    float gainVal;
+    int bitVal;
+    int downSampleVal;
+    float distVal;
+    float drywetPercentageVal;
+    
+    bool gainSwitch;
+    bool bitSwitch;
+    bool downSampleSwitch;
+    bool distSwitch;
     
 private:
     //==============================================================================

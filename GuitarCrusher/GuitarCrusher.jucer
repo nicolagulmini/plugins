@@ -4,9 +4,15 @@
               addUsingNamespaceToJuceHeader="1" displaySplashScreen="1" jucerFormatVersion="1"
               companyName="Nicola Gulmini" companyWebsite="github.com/nicolagulmini"
               companyEmail="nicolagulmini@gmail.com" pluginDesc="BitCrusher for Guitar to make it 01000101011101jhnuif8wieytgfvwui7eutfgw"
-              pluginVST3Category="Distortion,Fx">
+              pluginVST3Category="Distortion,Fx" includeBinaryInJuceHeader="1">
   <MAINGROUP id="Z1zND4" name="GuitarCrusher">
     <GROUP id="{312F9111-9C66-3AE3-8600-4917E3E4BB51}" name="Source">
+      <FILE id="P98p4k" name="pearlSliderLookAndFeel.cpp" compile="1" resource="0"
+            file="Source/pearlSliderLookAndFeel.cpp"/>
+      <FILE id="AmkgiG" name="pearlSliderLookAndFeel.h" compile="0" resource="0"
+            file="Source/pearlSliderLookAndFeel.h"/>
+      <FILE id="Uj7SDG" name="pearlSlider.cpp" compile="1" resource="0" file="Source/pearlSlider.cpp"/>
+      <FILE id="FYaEBm" name="pearlSlider.h" compile="0" resource="0" file="Source/pearlSlider.h"/>
       <FILE id="YavhdL" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="ashFBi" name="PluginProcessor.h" compile="0" resource="0"
@@ -15,6 +21,9 @@
             file="Source/PluginEditor.cpp"/>
       <FILE id="ip3X63" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
+    <FILE id="DJGk92" name="backgroundImg.jpg" compile="0" resource="1"
+          file="backgroundImg.jpg"/>
+    <FILE id="MpjA32" name="knobs.png" compile="0" resource="1" file="../../knobs.png"/>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
