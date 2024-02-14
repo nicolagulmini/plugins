@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 using juce::Decibels;
+using juce::AudioVisualiserComponent;
 
 //==============================================================================
 /**
@@ -70,6 +71,8 @@ public:
     bool bitSwitch;
     bool downSampleSwitch;
     bool distSwitch;
+    
+    AudioVisualiserComponent waveViewer;
     
 private:
     //==============================================================================

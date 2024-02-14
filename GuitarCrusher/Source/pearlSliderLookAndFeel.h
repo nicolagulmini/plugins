@@ -21,8 +21,9 @@ public:
     pearlSliderLookAndFeel();
 
     void drawRotarySlider(Graphics& g, int x, int y, int width, int height, float sliderPos, float rotaryStartAngle, float rotaryEndAngle, Slider& slider) override;
-    void drawLabel(Graphics& g, Label& label) override;
+    //void drawLabel(Graphics& g, Label& label) override;
 
 private:
-    Image knobRelease;
+    Image outsideGear;
+    Image insideFill;
 };

@@ -19,7 +19,7 @@ GuitarCrusherAudioProcessor::GuitarCrusherAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), waveViewer(1)
 #endif
 {
     // initialize default values
@@ -27,13 +27,16 @@ GuitarCrusherAudioProcessor::GuitarCrusherAudioProcessor()
     gainVal = 1.0f;
     downSampleVal = 1;
     drywetPercentageVal = 100;
+    distVal = 1.0f;
     gainSwitch = true;
     bitSwitch = true;
     downSampleSwitch = true;
     distSwitch = true;
     inputVal = 1;
     outputVal = 1;
-    // i dont like this initialization
+    
+    waveViewer.setRepaintRate(30);
+    waveViewer.setBufferSize(256);
 }
 
 GuitarCrusherAudioProcessor::~GuitarCrusherAudioProcessor()
@@ -107,6 +110,7 @@ void GuitarCrusherAudioProcessor::prepareToPlay (double sampleRate, int samplesP
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    waveViewer.clear();
 }
 
 void GuitarCrusherAudioProcessor::releaseResources()
@@ -189,6 +193,8 @@ void GuitarCrusherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             channelData[sample] = outputVal*(finalVal*(drywetPercentageVal/100)+backupVal*(1-drywetPercentageVal/100));
         }
     }
+    
+    waveViewer.pushBuffer(buffer);
 }
 
 //==============================================================================

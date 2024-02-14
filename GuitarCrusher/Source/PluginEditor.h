@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include <BinaryData.h>
+#include "pearlSlider.h"
 
 using juce::Slider;
 using juce::ToggleButton;
@@ -35,11 +36,11 @@ private:
     // access the processor object that created it.
     GuitarCrusherAudioProcessor& audioProcessor;
     
-    Slider gainSlider;
-    Slider distSlider;
-    Slider bitSlider;
-    Slider downSampleSlider;
-    Slider drywetSlider;
+    pearlSlider gainSlider;
+    pearlSlider distSlider;
+    pearlSlider bitSlider;
+    pearlSlider downSampleSlider;
+    pearlSlider drywetSlider;
     
     Slider inputSlider;
     Slider outputSlider;

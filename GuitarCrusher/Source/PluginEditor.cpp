@@ -34,7 +34,7 @@ GuitarCrusherAudioProcessorEditor::GuitarCrusherAudioProcessorEditor (GuitarCrus
     bitSlider.setName("Bit");
     bitSlider.setSliderStyle(Slider::SliderStyle::Rotary);
     bitSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 50, 20);
-    bitSlider.setRange(0, 30, 1);
+    bitSlider.setRange(0, 30, 0.1);
     bitSlider.setValue(audioProcessor.bitVal);
     addAndMakeVisible(&bitSlider);
     bitSlider.addListener(this);
@@ -58,6 +58,9 @@ GuitarCrusherAudioProcessorEditor::GuitarCrusherAudioProcessorEditor (GuitarCrus
     
     inputSlider.setName("in");
     inputSlider.setSliderStyle(Slider::SliderStyle::LinearVertical);
+    inputSlider.setColour(0x1001200, Colours::lightsteelblue);
+    inputSlider.setColour(0x1001300, Colours::gold);
+    inputSlider.setColour(0x1001310, Colours::black);
     inputSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 50, 20);
     inputSlider.setRange(0.0f, 1.0f);
     inputSlider.setValue(audioProcessor.inputVal);
@@ -66,6 +69,9 @@ GuitarCrusherAudioProcessorEditor::GuitarCrusherAudioProcessorEditor (GuitarCrus
     
     outputSlider.setName("out");
     outputSlider.setSliderStyle(Slider::SliderStyle::LinearVertical);
+    outputSlider.setColour(0x1001200, Colours::lightsteelblue);
+    outputSlider.setColour(0x1001300, Colours::gold);
+    outputSlider.setColour(0x1001310, Colours::black);
     outputSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 50, 20);
     outputSlider.setRange(0.0f, 1.0f);
     outputSlider.setValue(audioProcessor.outputVal);
@@ -106,7 +112,11 @@ GuitarCrusherAudioProcessorEditor::GuitarCrusherAudioProcessorEditor (GuitarCrus
     addAndMakeVisible(&downSampleButton);
     downSampleButton.addListener(this);
     
-    setSize (1000, 200); // put 1000, 600 for full-image size
+    // wave viewer
+    addAndMakeVisible(audioProcessor.waveViewer);
+    audioProcessor.waveViewer.setColours(Colours::white, Colours::black.withAlpha(0.2f));
+    
+    setSize (1000, 600); // put 1000, 600 for full-image size
 }
 
 GuitarCrusherAudioProcessorEditor::~GuitarCrusherAudioProcessorEditor()
@@ -123,12 +133,15 @@ void GuitarCrusherAudioProcessorEditor::paint (juce::Graphics& g)
     
     int wText = 100;
     int hText = 20;
-    g.drawText(gainSlider.getName(), gainSlider.getX() + gainSlider.getWidth()/2 - wText/2, gainSlider.getY() + gainSlider.getHeight()/2 - hText/2 + gainButton.getY()/2, wText, hText, Justification::centred);
-    g.drawText(distSlider.getName(), distSlider.getX() + distSlider.getWidth()/2 - wText/2, distSlider.getY() + distSlider.getHeight()/2 - hText/2 + distButton.getY()/2, wText, hText, Justification::centred);
-    g.drawText(bitSlider.getName(), bitSlider.getX() + bitSlider.getWidth()/2 - wText/2, bitSlider.getY() + bitSlider.getHeight()/2 - hText/2 + crushButton.getY()/2, wText, hText, Justification::centred);
-    g.drawText(downSampleSlider.getName(), downSampleSlider.getX() + downSampleSlider.getWidth()/2- wText/2, downSampleSlider.getY() + downSampleSlider.getHeight()/2 - hText/2 + downSampleButton.getY()/2, wText, hText, Justification::centred);
-    g.drawText(drywetSlider.getName(), drywetSlider.getX() + drywetSlider.getWidth()/2 - wText/2, drywetSlider.getY() + drywetSlider.getHeight()/2 - hText/2 + distButton.getY()/2, wText, hText, Justification::centred);
     
+    // knobs
+    g.drawText(gainSlider.getName(), gainSlider.getX() + gainSlider.getWidth()/2 - wText/2, gainSlider.getY() + gainSlider.getHeight(), wText, hText, Justification::centred);
+    g.drawText(distSlider.getName(), distSlider.getX() + distSlider.getWidth()/2 - wText/2, distSlider.getY() + distSlider.getHeight(), wText, hText, Justification::centred);
+    g.drawText(bitSlider.getName(), bitSlider.getX() + bitSlider.getWidth()/2 - wText/2, bitSlider.getY() + bitSlider.getHeight(), wText, hText, Justification::centred);
+    g.drawText(downSampleSlider.getName(), downSampleSlider.getX() + downSampleSlider.getWidth()/2- wText/2, downSampleSlider.getY() + downSampleSlider.getHeight(), wText, hText, Justification::centred);
+    g.drawText(drywetSlider.getName(), drywetSlider.getX() + drywetSlider.getWidth()/2 - wText/2, drywetSlider.getY() + drywetSlider.getHeight(), wText, hText, Justification::centred);
+    
+    // buttons
     g.drawText(inputSlider.getName(), inputSlider.getX() + inputSlider.getWidth()/2 - wText/2, inputSlider.getY() + inputSlider.getHeight() - hText/2, wText, hText, Justification::centred);
     g.drawText(outputSlider.getName(), outputSlider.getX() + outputSlider.getWidth()/2 - wText/2, outputSlider.getY() + outputSlider.getHeight() - hText/2, wText, hText, Justification::centred);
 }
@@ -138,28 +151,32 @@ void GuitarCrusherAudioProcessorEditor::resized()
     // dimensions
     
     int dimSwitcher = 25;
+    
     int sliderWidth = 50;
     int sliderHeight = 160;
-    int knobsDim = 180;
+    
+    int knobsDim = 120;
+    int knobsMargin = 30;
     
     // x, y, w, h
     
     // knobs
-    gainSlider.setBounds(sliderWidth, 0, knobsDim, knobsDim);
-    distSlider.setBounds(knobsDim+sliderWidth, 0, knobsDim, knobsDim);
-    bitSlider.setBounds(knobsDim*2+sliderWidth, 0, knobsDim, knobsDim);
-    downSampleSlider.setBounds(knobsDim*3+sliderWidth, 0, knobsDim, knobsDim);
-    drywetSlider.setBounds(knobsDim*4+sliderWidth, 0, knobsDim, knobsDim);
+    gainSlider.setBounds(sliderWidth+knobsMargin, 0+knobsMargin, knobsDim, knobsDim);
+    distSlider.setBounds(gainSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
+    bitSlider.setBounds(distSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
+    downSampleSlider.setBounds(bitSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
+    drywetSlider.setBounds(downSampleSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     
-    inputSlider.setBounds(0, 0, sliderWidth, sliderHeight);
-    outputSlider.setBounds(knobsDim*5+sliderWidth, 0, sliderWidth, sliderHeight);
+    inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
+    outputSlider.setBounds(drywetSlider.getX()+knobsDim+knobsMargin, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     
-    // switcher
+    // switchers
+    gainButton.setBounds(gainSlider.getX()+knobsDim-dimSwitcher/2, gainSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
+    distButton.setBounds(distSlider.getX()+knobsDim-dimSwitcher/2, distSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
+    crushButton.setBounds(bitSlider.getX()+knobsDim-dimSwitcher/2, bitSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
+    downSampleButton.setBounds(downSampleSlider.getX()+knobsDim-dimSwitcher/2, downSampleSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     
-    gainButton.setBounds(knobsDim/2-dimSwitcher/2+sliderWidth, knobsDim/2-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    distButton.setBounds(knobsDim/2*3-dimSwitcher/2+sliderWidth, knobsDim/2-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    crushButton.setBounds(knobsDim/2*5-dimSwitcher/2+sliderWidth, knobsDim/2-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    downSampleButton.setBounds(knobsDim/2*7-dimSwitcher/2+sliderWidth, knobsDim/2-dimSwitcher/2, dimSwitcher, dimSwitcher);
+    audioProcessor.waveViewer.setBounds(sliderWidth/2, 200, 500, 200);
 }
 
 void GuitarCrusherAudioProcessorEditor::sliderValueChanged (Slider *slider)
@@ -170,7 +187,7 @@ void GuitarCrusherAudioProcessorEditor::sliderValueChanged (Slider *slider)
     }
     else if (slider == &bitSlider)
     {
-        audioProcessor.bitVal = bitSlider.getValue();
+        audioProcessor.bitVal = int(bitSlider.getValue());
     }
     else if (slider == &downSampleSlider)
     {
@@ -200,17 +217,21 @@ void GuitarCrusherAudioProcessorEditor::buttonClicked (Button *button)
     {
         audioProcessor.gainSwitch = gainButton.getToggleState();
         //DBG(int(gainButton.getToggleState()));
+        gainSlider.setEnabled(gainButton.getToggleState());
     }
     else if (button == &distButton)
     {
         audioProcessor.distSwitch = distButton.getToggleState();
+        distSlider.setEnabled(distButton.getToggleState());
     }
     else if (button == &crushButton)
     {
         audioProcessor.bitSwitch = crushButton.getToggleState();
+        bitSlider.setEnabled(crushButton.getToggleState());
     }
     else if (button == &downSampleButton)
     {
         audioProcessor.downSampleSwitch = downSampleButton.getToggleState();
+        downSampleSlider.setEnabled(downSampleButton.getToggleState());
     }
 }
