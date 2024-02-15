@@ -19,22 +19,9 @@ GuitarCrusherAudioProcessor::GuitarCrusherAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ), waveViewer(1)
+                       ), waveViewer(getTotalNumOutputChannels())
 #endif
 {
-    // initialize default values
-    bitVal = 0;
-    gainVal = 1.0f;
-    downSampleVal = 1;
-    drywetPercentageVal = 100;
-    distVal = 1.0f;
-    gainSwitch = true;
-    bitSwitch = true;
-    downSampleSwitch = true;
-    distSwitch = true;
-    inputVal = 1;
-    outputVal = 1;
-    
     waveViewer.setRepaintRate(30);
     waveViewer.setBufferSize(256);
 }
@@ -117,6 +104,7 @@ void GuitarCrusherAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
+    waveViewer.clear();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations

@@ -22,8 +22,12 @@ public:
 
     void drawRotarySlider(Graphics& g, int x, int y, int width, int height, float sliderPos, float rotaryStartAngle, float rotaryEndAngle, Slider& slider) override;
     //void drawLabel(Graphics& g, Label& label) override;
+    void drawLinearSlider(Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, Slider::SliderStyle, Slider& slider) override;
 
 private:
     Image outsideGear;
     Image insideFill;
+    Image inactiveFill;
+    Image inactiveGear;
+    Image goldThumb;
 };

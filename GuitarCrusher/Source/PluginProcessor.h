@@ -58,22 +58,22 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    float inputVal;
-    float outputVal;
+    float inputVal {1};
+    float outputVal {1};
     
-    float gainVal;
-    int bitVal;
-    int downSampleVal;
-    float distVal;
-    float drywetPercentageVal;
+    float gainVal {1.0f};
+    int bitVal {0};
+    int downSampleVal {1};
+    float distVal {1.0f};
+    float drywetPercentageVal {100};
     
-    bool gainSwitch;
-    bool bitSwitch;
-    bool downSampleSwitch;
-    bool distSwitch;
+    bool gainSwitch {true};
+    bool bitSwitch {true};
+    bool downSampleSwitch {true};
+    bool distSwitch {true};
     
     AudioVisualiserComponent waveViewer;
-    
+        
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarCrusherAudioProcessor)

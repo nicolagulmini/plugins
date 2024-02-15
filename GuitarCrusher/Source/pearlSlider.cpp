@@ -23,7 +23,7 @@ pearlSlider::~pearlSlider()
 {
     setLookAndFeel(nullptr);
 }
-
+/*
 void pearlSlider::mouseDown(const MouseEvent& event)
 {
     Slider::mouseDown(event);
@@ -37,3 +37,4 @@ void pearlSlider::mouseUp(const MouseEvent& event)
     Desktop::setMousePosition(mousePosition);
     setMouseCursor(MouseCursor::NormalCursor);
 }
+*/

@@ -58,9 +58,6 @@ GuitarCrusherAudioProcessorEditor::GuitarCrusherAudioProcessorEditor (GuitarCrus
     
     inputSlider.setName("in");
     inputSlider.setSliderStyle(Slider::SliderStyle::LinearVertical);
-    inputSlider.setColour(0x1001200, Colours::lightsteelblue);
-    inputSlider.setColour(0x1001300, Colours::gold);
-    inputSlider.setColour(0x1001310, Colours::black);
     inputSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 50, 20);
     inputSlider.setRange(0.0f, 1.0f);
     inputSlider.setValue(audioProcessor.inputVal);
@@ -69,9 +66,6 @@ GuitarCrusherAudioProcessorEditor::GuitarCrusherAudioProcessorEditor (GuitarCrus
     
     outputSlider.setName("out");
     outputSlider.setSliderStyle(Slider::SliderStyle::LinearVertical);
-    outputSlider.setColour(0x1001200, Colours::lightsteelblue);
-    outputSlider.setColour(0x1001300, Colours::gold);
-    outputSlider.setColour(0x1001310, Colours::black);
     outputSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 50, 20);
     outputSlider.setRange(0.0f, 1.0f);
     outputSlider.setValue(audioProcessor.outputVal);
@@ -83,32 +77,24 @@ GuitarCrusherAudioProcessorEditor::GuitarCrusherAudioProcessorEditor (GuitarCrus
     gainButton.setName("Gain Switcher");
     gainButton.setToggleState(true, NotificationType::dontSendNotification);
     gainButton.setClickingTogglesState(true);
-    gainButton.setColour(0x1006502, Colours::red);
-    gainButton.setColour(0x1006503, Colours::black);
     addAndMakeVisible(&gainButton);
     gainButton.addListener(this);
     
     distButton.setName("Distortion Switcher");
     distButton.setToggleState(true, NotificationType::dontSendNotification);
     distButton.setClickingTogglesState(true);
-    distButton.setColour(0x1006502, Colours::red);
-    distButton.setColour(0x1006503, Colours::black);
     addAndMakeVisible(&distButton);
     distButton.addListener(this);
     
     crushButton.setName("Crush Switcher");
     crushButton.setToggleState(true, NotificationType::dontSendNotification);
     crushButton.setClickingTogglesState(true);
-    crushButton.setColour(0x1006502, Colours::red);
-    crushButton.setColour(0x1006503, Colours::black);
     addAndMakeVisible(&crushButton);
     crushButton.addListener(this);
     
     downSampleButton.setName("DWNSMPL Switcher");
     downSampleButton.setToggleState(true, NotificationType::dontSendNotification);
     downSampleButton.setClickingTogglesState(true);
-    downSampleButton.setColour(0x1006502, Colours::red);
-    downSampleButton.setColour(0x1006503, Colours::black);
     addAndMakeVisible(&downSampleButton);
     downSampleButton.addListener(this);
     
@@ -134,16 +120,57 @@ void GuitarCrusherAudioProcessorEditor::paint (juce::Graphics& g)
     int wText = 100;
     int hText = 20;
     
+    
     // knobs
-    g.drawText(gainSlider.getName(), gainSlider.getX() + gainSlider.getWidth()/2 - wText/2, gainSlider.getY() + gainSlider.getHeight(), wText, hText, Justification::centred);
-    g.drawText(distSlider.getName(), distSlider.getX() + distSlider.getWidth()/2 - wText/2, distSlider.getY() + distSlider.getHeight(), wText, hText, Justification::centred);
-    g.drawText(bitSlider.getName(), bitSlider.getX() + bitSlider.getWidth()/2 - wText/2, bitSlider.getY() + bitSlider.getHeight(), wText, hText, Justification::centred);
-    g.drawText(downSampleSlider.getName(), downSampleSlider.getX() + downSampleSlider.getWidth()/2- wText/2, downSampleSlider.getY() + downSampleSlider.getHeight(), wText, hText, Justification::centred);
-    g.drawText(drywetSlider.getName(), drywetSlider.getX() + drywetSlider.getWidth()/2 - wText/2, drywetSlider.getY() + drywetSlider.getHeight(), wText, hText, Justification::centred);
+    g.drawText(gainSlider.getName(),
+               gainSlider.getX() + gainSlider.getWidth()/2 - wText/2,
+               gainSlider.getY() + gainSlider.getHeight() + 10,
+               wText,
+               hText,
+               Justification::centred);
+    
+    g.drawText(distSlider.getName(),
+               distSlider.getX() + distSlider.getWidth()/2 - wText/2,
+               distSlider.getY() + distSlider.getHeight() + 10,
+               wText,
+               hText,
+               Justification::centred);
+    
+    g.drawText(bitSlider.getName(),
+               bitSlider.getX() + bitSlider.getWidth()/2 - wText/2,
+               bitSlider.getY() + bitSlider.getHeight() + 10,
+               wText,
+               hText,
+               Justification::centred);
+    
+    g.drawText(downSampleSlider.getName(),
+               downSampleSlider.getX() + downSampleSlider.getWidth()/2- wText/2,
+               downSampleSlider.getY() + downSampleSlider.getHeight() + 10,
+               wText,
+               hText,
+               Justification::centred);
+    
+    g.drawText(drywetSlider.getName(),
+               drywetSlider.getX() + drywetSlider.getWidth()/2 - wText/2,
+               drywetSlider.getY() + drywetSlider.getHeight() + 10,
+               wText,
+               hText,
+               Justification::centred);
     
     // buttons
-    g.drawText(inputSlider.getName(), inputSlider.getX() + inputSlider.getWidth()/2 - wText/2, inputSlider.getY() + inputSlider.getHeight() - hText/2, wText, hText, Justification::centred);
-    g.drawText(outputSlider.getName(), outputSlider.getX() + outputSlider.getWidth()/2 - wText/2, outputSlider.getY() + outputSlider.getHeight() - hText/2, wText, hText, Justification::centred);
+    g.drawText(inputSlider.getName(),
+               inputSlider.getX() + inputSlider.getWidth()/2 - wText/2,
+               inputSlider.getY() + inputSlider.getHeight() - hText/2 + 10,
+               wText,
+               hText,
+               Justification::centred);
+    
+    g.drawText(outputSlider.getName(),
+               outputSlider.getX() + outputSlider.getWidth()/2 - wText/2,
+               outputSlider.getY() + outputSlider.getHeight() - hText/2 + 10,
+               wText,
+               hText,
+               Justification::centred);
 }
 
 void GuitarCrusherAudioProcessorEditor::resized()

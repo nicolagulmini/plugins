@@ -12,6 +12,7 @@
 #include "PluginProcessor.h"
 #include <BinaryData.h>
 #include "pearlSlider.h"
+#include "RedSwitcher.h"
 
 using juce::Slider;
 using juce::ToggleButton;
@@ -42,13 +43,13 @@ private:
     pearlSlider downSampleSlider;
     pearlSlider drywetSlider;
     
-    Slider inputSlider;
-    Slider outputSlider;
+    pearlSlider inputSlider;
+    pearlSlider outputSlider;
     
-    ToggleButton gainButton;
-    ToggleButton distButton;
-    ToggleButton crushButton;
-    ToggleButton downSampleButton;
+    RedSwitcher gainButton;
+    RedSwitcher distButton;
+    RedSwitcher crushButton;
+    RedSwitcher downSampleButton;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarCrusherAudioProcessorEditor)
 };
