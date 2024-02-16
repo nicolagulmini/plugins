@@ -19,11 +19,12 @@ GuitarCrusherAudioProcessor::GuitarCrusherAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ), waveViewer(getTotalNumOutputChannels())
+                       )//, waveViewer(1)
 #endif
 {
-    waveViewer.setRepaintRate(30);
-    waveViewer.setBufferSize(256);
+    //waveViewer.setRepaintRate(30);
+    //waveViewer.setBufferSize(1024);
+    //waveViewer.setRepaintRate(0);
 }
 
 GuitarCrusherAudioProcessor::~GuitarCrusherAudioProcessor()
@@ -97,14 +98,14 @@ void GuitarCrusherAudioProcessor::prepareToPlay (double sampleRate, int samplesP
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    waveViewer.clear();
+    //waveViewer.clear();
 }
 
 void GuitarCrusherAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
-    waveViewer.clear();
+    //waveViewer.clear();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -153,19 +154,13 @@ void GuitarCrusherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             toProcessVal = backupVal = finalVal = channelData[sample];
 
             if (gainSwitch)
-            {
                 toProcessVal *= Decibels::decibelsToGain(gainVal);
-            }
             
             if (distSwitch)
-            {
                 toProcessVal = tanh(2/M_PI * atan(distVal*toProcessVal));
-            }
             
             if (bitSwitch)
-            {
                 toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-bitVal)+1)));
-            }
             
             finalVal = toProcessVal;
             
@@ -173,16 +168,21 @@ void GuitarCrusherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             {
                 int stepIndex = sample%int(buffer.getNumSamples()*pow(1.08, downSampleVal)/100);
                 if (stepIndex != 0)
-                {
                     finalVal = channelData[sample - stepIndex];
-                }
             }
                         
             channelData[sample] = outputVal*(finalVal*(drywetPercentageVal/100)+backupVal*(1-drywetPercentageVal/100));
         }
     }
     
-    waveViewer.pushBuffer(buffer);
+    //AudioBuffer<float> *tmpBuffer = new AudioBuffer<float>(1, 1024);
+    //tmpBuffer->clear (0, 0, tmpBuffer->getNumSamples());
+    //auto* tmpData = tmpBuffer->getWritePointer(0);
+    //for (int sample = 0; sample < 1024; ++sample)
+    //    tmpData[sample] = sin(2*M_PI/1024*sample);
+    
+    
+    //waveViewer.pushBuffer(*tmpBuffer);
 }
 
 //==============================================================================

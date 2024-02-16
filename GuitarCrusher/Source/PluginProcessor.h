@@ -72,7 +72,7 @@ public:
     bool downSampleSwitch {true};
     bool distSwitch {true};
     
-    AudioVisualiserComponent waveViewer;
+    //AudioVisualiserComponent waveViewer;
         
 private:
     //==============================================================================

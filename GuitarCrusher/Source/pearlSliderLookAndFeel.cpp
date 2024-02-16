@@ -43,7 +43,6 @@ void pearlSliderLookAndFeel::drawLinearSlider(Graphics& g, int x, int y, int wid
 {
     auto thumbDim = 16;
     auto thumbX = x + width/2 - thumbDim/2;
-    auto thumbY = sliderPos;
     
     drawLinearSliderBackground(g, x, y, width, height, sliderPos, minSliderPos, maxSliderPos, style, slider);
     g.drawImage(goldThumb, thumbX, sliderPos-thumbDim/2, thumbDim, thumbDim, 0, 0, goldThumb.getWidth(), goldThumb.getHeight());

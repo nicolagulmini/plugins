@@ -99,8 +99,8 @@ GuitarCrusherAudioProcessorEditor::GuitarCrusherAudioProcessorEditor (GuitarCrus
     downSampleButton.addListener(this);
     
     // wave viewer
-    addAndMakeVisible(audioProcessor.waveViewer);
-    audioProcessor.waveViewer.setColours(Colours::white, Colours::black.withAlpha(0.2f));
+    //addAndMakeVisible(audioProcessor.waveViewer);
+    //audioProcessor.waveViewer.setColours(Colours::white, Colours::black);
     
     setSize (1000, 600); // put 1000, 600 for full-image size
 }
@@ -171,6 +171,15 @@ void GuitarCrusherAudioProcessorEditor::paint (juce::Graphics& g)
                wText,
                hText,
                Justification::centred);
+    
+    // temporary bounds of wave visualizer
+    //g.drawLine(inputSlider.getX()+inputSlider.getWidth()/2, 200, inputSlider.getX()+inputSlider.getWidth()/2, 500);
+    //g.drawLine(inputSlider.getX()+inputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth()/2, 200);
+    //g.drawLine(getWidth()-outputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth()/2, 500);
+    //g.drawLine(inputSlider.getX()+inputSlider.getWidth()/2, 500, getWidth()-outputSlider.getWidth()/2, 500);
+    //g.drawRoundedRectangle(inputSlider.getX()+inputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth(), 300, 0.5f, 0.5f);
+    localRectangle = Rectangle<int>(inputSlider.getX()*gainSlider.getValue()+inputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth(), 300);
+    g.drawRect(localRectangle);
 }
 
 void GuitarCrusherAudioProcessorEditor::resized()
@@ -203,7 +212,7 @@ void GuitarCrusherAudioProcessorEditor::resized()
     crushButton.setBounds(bitSlider.getX()+knobsDim-dimSwitcher/2, bitSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     downSampleButton.setBounds(downSampleSlider.getX()+knobsDim-dimSwitcher/2, downSampleSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     
-    audioProcessor.waveViewer.setBounds(sliderWidth/2, 200, 500, 200);
+    //audioProcessor.waveViewer.setBounds(sliderWidth/2, 200, 400, 200);
 }
 
 void GuitarCrusherAudioProcessorEditor::sliderValueChanged (Slider *slider)
