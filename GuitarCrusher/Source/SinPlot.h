@@ -24,20 +24,20 @@ public:
     
     void setIsBitCrushing(bool cond) {bitCrusher = cond;}
     bool isBitCrushing() {return bitCrusher;}
-    void setIsDownSampling(bool cond) {downSaple = cond;}
-    bool isDownSampling() {return downSaple;}
+    void setIsDownSampling(bool cond) {downSample = cond;}
+    bool isDownSampling() {return downSample;}
     void setBit(int newBit) {if (newBit >= 0 and newBit < 33) bit = newBit;}
     int getBit() {return bit;}
     void setDownSampleValue(float dwnsmpl) {if (dwnsmpl >= 1 and dwnsmpl <= 50) downSampleValue = dwnsmpl;}
     bool getDownSampleValue() {return downSampleValue;}
+    void setPercentageDryWet(float percentage) {if (percentage >= 0.0f and percentage <= 1.0f) percentageDryWet = percentage;}
     
 private:
     
     int s = 100;
     bool bitCrusher = true;
-    bool downSaple = true;
-    int bit = 30;
+    bool downSample = true;
+    int bit = 0;
     float downSampleValue = 1.0f;
-    
-    float buffer[512]; // temp value to get the result...
+    float percentageDryWet = 1.0f;
 };

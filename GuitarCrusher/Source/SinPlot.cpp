@@ -14,29 +14,41 @@
 //==============================================================================
 void SinPlot::paint (Graphics &g)
 {
-    g.drawRect(0, 0, s, s);
-    g.drawLine(0, getHeight()/2, getWidth(), getHeight()/2);
-    for (int i = 0; i < getWidth()-1; ++i)
-        g.drawLine(i, wave(i), i+1, wave(i+1));
+    //g.drawLine(0, getHeight()/2, getWidth(), getHeight()/2, 0.5f);
+    
+    float firstPoint = wave(0);
+    
+    for (int i = 1; i < getWidth(); ++i)
+    {
+        float secondPoint = wave(i);
+            
+        if (bitCrusher)
+        {
+            firstPoint -= fmodf(firstPoint, -getHeight()/((32-bit)));
+            secondPoint -= fmodf(secondPoint, -getHeight()/((32-bit)));
+        }
+        
+        if (downSample)
+            if ((i-1)%int(getWidth()*downSampleValue/100) != 0)
+                secondPoint = firstPoint;
+            
+        
+        g.setColour(Colours::white);
+        g.setOpacity(percentageDryWet);
+        g.drawLine(i-1, firstPoint, i, secondPoint, 2);
+        
+        g.setColour(Colours::grey);
+        g.setOpacity(percentageDryWet);
+        g.drawLine(i-1, firstPoint*percentageDryWet+wave(i-1)*(1-percentageDryWet), i, secondPoint*percentageDryWet+wave(i)*(1-percentageDryWet), 2);
+        
+        g.setColour(Colours::darkgrey);
+        g.setOpacity(1-percentageDryWet);
+        g.drawLine(i-1, wave(i-1), i, wave(i), 2);
+        firstPoint = secondPoint;
+    }
 }
 
 float SinPlot::wave(int x)
 {
-    return getHeight()/2-(getHeight()/2-1)*sin(2*M_PI/getWidth()*x);
-    
-    /*
-    if (bitSwitch)
-        toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-bitVal)+1)));
-    
-    finalVal = toProcessVal;
-    
-    if (downSampleSwitch)
-    {
-        int stepIndex = sample%int(buffer.getNumSamples()*pow(1.08, downSampleVal)/100);
-        if (stepIndex != 0)
-            finalVal = channelData[sample - stepIndex];
-    }
-                
-    channelData[sample] = outputVal*(finalVal*(drywetPercentageVal/100)+backupVal*(1-drywetPercentageVal/100));
-     */
+    return getHeight()/2-(getHeight()/2-10)*sin(2*M_PI/getWidth()*x);
 }

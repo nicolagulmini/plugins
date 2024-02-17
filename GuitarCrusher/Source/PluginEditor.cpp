@@ -228,6 +228,7 @@ void GuitarCrusherAudioProcessorEditor::sliderValueChanged (Slider *slider)
     else if (slider == &drywetSlider)
     {
         audioProcessor.drywetPercentageVal = drywetSlider.getValue();
+        sinPlot.setPercentageDryWet(drywetSlider.getValue()/100);
     }
     else if (slider == &inputSlider)
     {
