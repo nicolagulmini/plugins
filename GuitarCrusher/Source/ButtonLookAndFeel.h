@@ -26,4 +26,6 @@ public:
 private:
     Image onButton;
     Image offButton;
+    //Image clickedOn;
+    //Image clickedOff;
 };

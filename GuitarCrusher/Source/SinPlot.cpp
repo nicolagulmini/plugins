@@ -38,7 +38,6 @@ void SinPlot::paint (Graphics &g)
         g.drawLine(i-1, firstPoint, i, secondPoint, 2);
         
         g.setColour(Colours::grey);
-        g.setOpacity(percentageDryWet);
         g.drawLine(i-1, firstPoint*percentageDryWet+wave(i-1)*(1-percentageDryWet), i, secondPoint*percentageDryWet+wave(i)*(1-percentageDryWet), 2);
         
         g.setColour(Colours::darkgrey);
@@ -50,5 +49,5 @@ void SinPlot::paint (Graphics &g)
 
 float SinPlot::wave(int x)
 {
-    return getHeight()/2-(getHeight()/2-10)*sin(2*M_PI/getWidth()*x);
+    return getHeight()/2*(1-sin(2*M_PI/getWidth()*x));
 }

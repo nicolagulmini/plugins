@@ -101,7 +101,7 @@ GuitarCrusherAudioProcessorEditor::GuitarCrusherAudioProcessorEditor (GuitarCrus
     sinPlot.setName("sin plot");
     addAndMakeVisible(sinPlot);
     
-    setSize (1000, 600); // put 1000, 600 for full-image size
+    setSize (1000, 550); // put 1000, 600 for full-image size
 }
 
 GuitarCrusherAudioProcessorEditor::~GuitarCrusherAudioProcessorEditor()
@@ -169,6 +169,27 @@ void GuitarCrusherAudioProcessorEditor::paint (juce::Graphics& g)
                wText,
                hText,
                Justification::centred);
+    
+    
+    g.setColour(Colours::white);
+    g.setOpacity(0.2);
+    g.fillRoundedRectangle(inputSlider.getX()+inputSlider.getWidth()/2-1, 200-1, getWidth()-outputSlider.getWidth()+1, 300+1, 10);
+
+    g.setColour(Colours::black);
+    g.setOpacity(0.1);
+    g.drawVerticalLine(inputSlider.getX()+inputSlider.getWidth()/2-1+190, 200, 500);
+    g.drawVerticalLine(inputSlider.getX()+inputSlider.getWidth()/2-1+190*2, 200, 500);
+    g.drawVerticalLine(inputSlider.getX()+inputSlider.getWidth()/2-1+190*3, 200, 500);
+    g.drawVerticalLine(inputSlider.getX()+inputSlider.getWidth()/2-1+190*4, 200, 500);
+    
+    g.drawHorizontalLine(199+60, inputSlider.getX()+inputSlider.getWidth()/2-1, inputSlider.getX()-inputSlider.getWidth()/2+getWidth());
+    g.drawHorizontalLine(199+60*2, inputSlider.getX()+inputSlider.getWidth()/2-1, inputSlider.getX()-inputSlider.getWidth()/2+getWidth());
+    g.drawHorizontalLine(199+60*3, inputSlider.getX()+inputSlider.getWidth()/2-1, inputSlider.getX()-inputSlider.getWidth()/2+getWidth());
+    g.drawHorizontalLine(199+60*4, inputSlider.getX()+inputSlider.getWidth()/2-1, inputSlider.getX()-inputSlider.getWidth()/2+getWidth());
+    
+    g.setColour(Colours::black);
+    g.setOpacity(1);
+    g.drawRoundedRectangle(inputSlider.getX()+inputSlider.getWidth()/2-1, 200-1, getWidth()-outputSlider.getWidth()+1, 300+1, 10, 3);
 }
 
 void GuitarCrusherAudioProcessorEditor::resized()
@@ -202,7 +223,7 @@ void GuitarCrusherAudioProcessorEditor::resized()
     downSampleButton.setBounds(downSampleSlider.getX()+knobsDim-dimSwitcher/2, downSampleSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     
     //audioProcessor.waveViewer.setBounds(sliderWidth/2, 200, 400, 200);
-    sinPlot.setBounds(inputSlider.getX()*gainSlider.getValue()+inputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth(), 300);
+    sinPlot.setBounds(inputSlider.getX()+inputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth(), 300);
 }
 
 void GuitarCrusherAudioProcessorEditor::sliderValueChanged (Slider *slider)
@@ -245,7 +266,6 @@ void GuitarCrusherAudioProcessorEditor::buttonClicked (Button *button)
     if (button == &gainButton)
     {
         audioProcessor.gainSwitch = gainButton.getToggleState();
-        //DBG(int(gainButton.getToggleState()));
         gainSlider.setEnabled(gainButton.getToggleState());
     }
     else if (button == &distButton)
