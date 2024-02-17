@@ -1,1 +1,1 @@
-JUCE Plugins
+* Juce plugins *
