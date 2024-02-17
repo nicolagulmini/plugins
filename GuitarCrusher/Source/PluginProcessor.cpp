@@ -174,15 +174,6 @@ void GuitarCrusherAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
             channelData[sample] = outputVal*(finalVal*(drywetPercentageVal/100)+backupVal*(1-drywetPercentageVal/100));
         }
     }
-    
-    //AudioBuffer<float> *tmpBuffer = new AudioBuffer<float>(1, 1024);
-    //tmpBuffer->clear (0, 0, tmpBuffer->getNumSamples());
-    //auto* tmpData = tmpBuffer->getWritePointer(0);
-    //for (int sample = 0; sample < 1024; ++sample)
-    //    tmpData[sample] = sin(2*M_PI/1024*sample);
-    
-    
-    //waveViewer.pushBuffer(*tmpBuffer);
 }
 
 //==============================================================================

@@ -13,6 +13,7 @@
 #include <BinaryData.h>
 #include "pearlSlider.h"
 #include "RedSwitcher.h"
+#include "SinPlot.h"
 
 using juce::Slider;
 using juce::ToggleButton;
@@ -51,7 +52,7 @@ private:
     RedSwitcher crushButton;
     RedSwitcher downSampleButton;
     
-    Rectangle<int> localRectangle;
+    SinPlot sinPlot;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarCrusherAudioProcessorEditor)
 };
