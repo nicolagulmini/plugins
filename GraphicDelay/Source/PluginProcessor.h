@@ -59,4 +59,7 @@ public:
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GraphicDelayAudioProcessor)
+    
+    AudioBuffer<float> delayBuffer;
+    int delayBufferWritePosition { 0 };
 };
