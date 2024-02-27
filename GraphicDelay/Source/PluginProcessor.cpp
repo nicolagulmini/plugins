@@ -133,10 +133,12 @@ void GraphicDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-
+    
+    int bufferSize = buffer.getNumSamples();
+    int delayBufferSize = delayBuffer.getNumSamples();
     
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.clear (i, 0, bufferSize);
 
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
@@ -144,6 +146,9 @@ void GraphicDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
         // ..do something to the data...
     }
+    
+    delayBufferWritePosition += bufferSize;
+    delayBufferWritePosition %= delayBufferSize;
     
 }
 
