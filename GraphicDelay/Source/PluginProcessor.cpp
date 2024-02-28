@@ -145,11 +145,25 @@ void GraphicDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         auto* channelData = buffer.getWritePointer (channel);
 
         // ..do something to the data...
+        fillBuffer(channel, delayBufferSize, bufferSize, channelData);
     }
     
     delayBufferWritePosition += bufferSize;
     delayBufferWritePosition %= delayBufferSize;
     
+}
+
+void GraphicDelayAudioProcessor::fillBuffer (int channel, int delayBufferSize, int bufferSize, float* channelData)
+{
+    if (delayBufferSize > delayBufferWritePosition + bufferSize)
+        delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, bufferSize, 1.0f, 0.9f);
+    else
+    {
+        int leftSamples = delayBufferSize - delayBufferWritePosition;
+        int numSamplesAtStart = bufferSize - leftSamples;
+        delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, leftSamples, 1.0f, 0.9f);
+        delayBuffer.copyFromWithRamp(channel, 0, channelData, numSamplesAtStart, 1.0f, 0.9f);
+    }
 }
 
 //==============================================================================

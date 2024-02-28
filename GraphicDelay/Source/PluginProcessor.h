@@ -58,8 +58,11 @@ public:
 
 private:
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GraphicDelayAudioProcessor)
     
+    void fillBuffer (int channel, int delayBufferSize, int bufferSize, float* channelData);
+
     AudioBuffer<float> delayBuffer;
     int delayBufferWritePosition { 0 };
+    
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GraphicDelayAudioProcessor)
 };
