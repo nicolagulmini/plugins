@@ -94,6 +94,7 @@ void GraphicDelayAudioProcessor::changeProgramName (int index, const juce::Strin
 void GraphicDelayAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     delayBuffer.setSize(2, (int) sampleRate * 2); // 2 seconds of circular buffer
+    delayBuffer.clear();
 }
 
 void GraphicDelayAudioProcessor::releaseResources()
@@ -134,38 +135,34 @@ void GraphicDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
-    int bufferSize = buffer.getNumSamples();
-    int delayBufferSize = delayBuffer.getNumSamples();
-    int readPosition; // 1 second in the past
-    float delayGain = 0.7;
-    
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, bufferSize);
+        buffer.clear (i, 0, buffer.getNumSamples());
 
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        auto* channelData = buffer.getWritePointer (channel);
-        fillBuffer(channel, delayBufferSize, bufferSize, channelData);
-        readPosition = delayBufferWritePosition - getSampleRate();
-        if (readPosition < 0)
-            readPosition += delayBufferSize;
-        // check if everything works...
-        if (readPosition + bufferSize < delayBufferSize)
-            buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, delayGain, delayGain);
-        else
-        {
-            buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), delayBufferSize-readPosition, delayGain, delayGain);
-            buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, delayGain, delayGain);
-        }
+        fillBuffer(buffer, channel);
+        readFromBuffer(buffer, channel);
+        fillBuffer(buffer, channel);
     }
-    
-    delayBufferWritePosition += bufferSize;
-    delayBufferWritePosition %= delayBufferSize;
+    updateBufferPositions(buffer);
     
 }
 
-void GraphicDelayAudioProcessor::fillBuffer (int channel, int delayBufferSize, int bufferSize, float* channelData)
+void GraphicDelayAudioProcessor::updateBufferPositions (juce::AudioBuffer<float>& buffer)
 {
+    int bufferSize = buffer.getNumSamples();
+    int delayBufferSize = delayBuffer.getNumSamples();
+    
+    delayBufferWritePosition += bufferSize;
+    delayBufferWritePosition %= delayBufferSize;
+}
+
+void GraphicDelayAudioProcessor::fillBuffer (juce::AudioBuffer<float>& buffer, int channel)
+{
+    int bufferSize = buffer.getNumSamples();
+    int delayBufferSize = delayBuffer.getNumSamples();
+    
+    float* channelData = buffer.getWritePointer (channel);
     if (delayBufferSize > delayBufferWritePosition + bufferSize)
         delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, bufferSize, 1.0f, 0.9f);
     else
@@ -174,6 +171,25 @@ void GraphicDelayAudioProcessor::fillBuffer (int channel, int delayBufferSize, i
         int numSamplesAtStart = bufferSize - leftSamples;
         delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, leftSamples, 1.0f, 1.0f);
         delayBuffer.copyFromWithRamp(channel, 0, channelData, numSamplesAtStart, 1.0f, 1.0f);
+    }
+}
+
+void GraphicDelayAudioProcessor::readFromBuffer (juce::AudioBuffer<float>& buffer, int channel)
+{
+    int bufferSize = buffer.getNumSamples();
+    int delayBufferSize = delayBuffer.getNumSamples();
+    
+    float delayGain = 0.7;
+    int readPosition = delayBufferWritePosition - getSampleRate(); // 1 second in the past
+    if (readPosition < 0)
+        readPosition += delayBufferSize;
+    // check if everything works...
+    if (readPosition + bufferSize < delayBufferSize)
+        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, delayGain, delayGain);
+    else
+    {
+        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), delayBufferSize-readPosition, delayGain, delayGain);
+        buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, delayGain, delayGain);
     }
 }
 
