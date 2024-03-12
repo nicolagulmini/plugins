@@ -137,6 +137,7 @@ void GraphicDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     int bufferSize = buffer.getNumSamples();
     int delayBufferSize = delayBuffer.getNumSamples();
     int readPosition; // 1 second in the past
+    float delayGain = 0.7;
     
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, bufferSize);
@@ -148,10 +149,14 @@ void GraphicDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         readPosition = delayBufferWritePosition - getSampleRate();
         if (readPosition < 0)
             readPosition += delayBufferSize;
-        
         // check if everything works...
-        buffer.addFromWithRamp(channel, <#int destStartSample#>, <#const float *source#>, <#int numSamples#>, 0.7f, 0.7f);
-        
+        if (readPosition + bufferSize < delayBufferSize)
+            buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, delayGain, delayGain);
+        else
+        {
+            buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), delayBufferSize-readPosition, delayGain, delayGain);
+            buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, delayGain, delayGain);
+        }
     }
     
     delayBufferWritePosition += bufferSize;
