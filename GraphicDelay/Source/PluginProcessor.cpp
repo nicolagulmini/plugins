@@ -164,7 +164,7 @@ void GraphicDelayAudioProcessor::fillBuffer (juce::AudioBuffer<float>& buffer, i
     
     float* channelData = buffer.getWritePointer (channel);
     if (delayBufferSize > delayBufferWritePosition + bufferSize)
-        delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, bufferSize, 1.0f, 0.9f);
+        delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, bufferSize, 1.0f, 1.0f);
     else
     {
         int leftSamples = delayBufferSize - delayBufferWritePosition;
@@ -179,17 +179,16 @@ void GraphicDelayAudioProcessor::readFromBuffer (juce::AudioBuffer<float>& buffe
     int bufferSize = buffer.getNumSamples();
     int delayBufferSize = delayBuffer.getNumSamples();
     
-    float delayGain = 0.7;
     int readPosition = delayBufferWritePosition - getSampleRate(); // 1 second in the past
     if (readPosition < 0)
         readPosition += delayBufferSize;
     // check if everything works...
     if (readPosition + bufferSize < delayBufferSize)
-        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, delayGain, delayGain);
+        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, 0.0f, 0.9f);
     else
     {
-        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), delayBufferSize-readPosition, delayGain, delayGain);
-        buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, delayGain, delayGain);
+        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), delayBufferSize-readPosition, 0.0f, 0.9f);
+        buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, 0.0f, 0.9f);
     }
 }
 
