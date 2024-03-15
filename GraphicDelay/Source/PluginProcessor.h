@@ -66,10 +66,8 @@ private:
     AudioBuffer<float> delayBuffer;
     int delayBufferWritePosition { 0 };
     
-    float readFromBufferDestGain { 0.9f };
-    float fillBufferGain { 1.0f };
-    float delayTime { 2.0f }; // not sure if this will change real time!
-    
+    double delayTime { 1000.0f }; // in ms
+    double mix { 1.0f };
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GraphicDelayAudioProcessor)
 };
