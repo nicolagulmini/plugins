@@ -55,6 +55,10 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    double delayTime { 1000.0f }; // in ms
+    double amountDelay { 1.0f };
+    double mix { 1.0f };
 
 private:
     //==============================================================================
@@ -65,9 +69,6 @@ private:
 
     AudioBuffer<float> delayBuffer;
     int delayBufferWritePosition { 0 };
-    
-    double delayTime { 1000.0f }; // in ms
-    double mix { 1.0f };
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GraphicDelayAudioProcessor)
 };
