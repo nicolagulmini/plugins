@@ -66,6 +66,9 @@ private:
     void fillBuffer (juce::AudioBuffer<float>& buffer, int channel);
     void readFromBuffer (juce::AudioBuffer<float>& buffer, int channel);
     void updateBufferPositions(juce::AudioBuffer<float>& buffer);
+    
+    bool previousPlayHeadState { false };
+    bool currentPlayHeadState { false };
 
     AudioBuffer<float> delayBuffer;
     int delayBufferWritePosition { 0 };
