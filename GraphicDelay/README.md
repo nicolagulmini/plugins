@@ -1,3 +1,3 @@
 # Graphic Delay
 
-I'm working on a very simple Delay as an excuse to program a GUI that helps users to visualize how the signal is delayed, in OpenGL.
+An attempt to develope a Delay from scratch, that is became an excuse to study the DSP module.
