@@ -59,6 +59,7 @@ public:
     double delayTime { 1000.0f }; // in ms
     double amountDelay { 1.0f };
     double mix { 1.0f };
+    bool reverseDelay { false };
 
 private:
     //==============================================================================
@@ -69,7 +70,7 @@ private:
     
     bool previousPlayHeadState { false };
     bool currentPlayHeadState { false };
-
+    
     AudioBuffer<float> delayBuffer;
     int delayBufferWritePosition { 0 };
     

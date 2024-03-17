@@ -150,7 +150,7 @@ void GraphicDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         fillBuffer(buffer, channel);
-        readFromBuffer(buffer, channel);
+        readFromBuffer(buffer, channel); // reverse implemented inside this method
         fillBuffer(buffer, channel);
     }
     updateBufferPositions(buffer);
@@ -192,6 +192,7 @@ void GraphicDelayAudioProcessor::readFromBuffer (juce::AudioBuffer<float>& buffe
     if (readPosition < 0)
         readPosition += delayBufferSize;
     
+    if (reverseDelay) delayBuffer.reverse(channel, 0, delayBufferSize);
     if (readPosition + bufferSize < delayBufferSize)
         buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, amountDelay, amountDelay);
     else
@@ -199,6 +200,7 @@ void GraphicDelayAudioProcessor::readFromBuffer (juce::AudioBuffer<float>& buffe
         buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), delayBufferSize-readPosition, amountDelay, amountDelay);
         buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, amountDelay, amountDelay);
     }
+    if (reverseDelay) delayBuffer.reverse(channel, 0, delayBufferSize);
 }
 
 //==============================================================================
