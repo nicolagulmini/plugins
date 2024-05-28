@@ -6,6 +6,15 @@
   ==============================================================================
 */
 
+/*
+ 
+ There are a couple of approaches to make delay time changes smoother :
+
+ Fade the audio out when the delay time starts changing and fade it back when its settled.
+ Interpolate through the delay buffer at a different speed to reach the new read head position corresponding to the new delay time. This is often used in “vintage” delay emulations. The interpolation should be high quality, plain linear interpolation probably isn’t going to work great.
+ Just using a SmoothedValue for the delay time parameter likely isn’t going to work.
+ */
+
 #pragma once
 
 #include <JuceHeader.h>
