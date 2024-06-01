@@ -196,10 +196,10 @@ cond_dim = 3 # it has to be 3
 
 n_iters = 5000 # min:0, max:10000
 lr = 0.002 # number
-slice_len = 300000 # number
+slice_len = 100000 # number
 dilation_growth = 8 # number
-n_layers = 10 # number
-n_channels = 20 # number
+n_layers = 5 # number
+n_channels = 12 # number
 alpha = 0.01 # min:0, max:1 balance between two loss functions
 
 if torch.cuda.is_available():
@@ -273,7 +273,7 @@ for n in range(n_iters):
         loss = (1-alpha)*loss_fn(y_hat[..., rf:], y_crop[..., rf:]) + alpha*loss_fn_l1(y_hat[..., rf:], y_crop[..., rf:])
     except Exception as e:
     	print('Exception: ', e)
-        sys.exit()
+    	sys.exit()
     loss.backward()
     losses.append(loss.detach().cpu())
     optimizer.step()
