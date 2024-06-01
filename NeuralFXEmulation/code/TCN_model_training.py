@@ -1,5 +1,8 @@
-import IPython
+''' Most of this code is taken from tutorials of https://github.com/Neutone/neutone_sdk '''
 
+import IPython
+import sys
+from pathlib import Path
 from tqdm.notebook import tqdm
 import numpy as np
 import scipy.signal
@@ -19,7 +22,9 @@ import auraloss
 from neutone_sdk import WaveformToWaveformBase, NeutoneParameter
 from neutone_sdk.utils import save_neutone_model
 
-#Define TCN Model
+#Define TCN Model:
+
+#Define 1-dimensional Convolution with memory
 class Conv1dCausal(nn.Module):  # Conv1d with cache
     """Causal convolution (padding applied to only left side)"""
     def __init__(self,
@@ -45,6 +50,7 @@ class Conv1dCausal(nn.Module):  # Conv1d with cache
         x = self.conv(x)
         return x
 
+#Define Feature-wise Linear Modulation layer
 class FiLM(nn.Module):
     def __init__(self,
                  cond_dim: int,  # dim of conditioning input
@@ -62,6 +68,7 @@ class FiLM(nn.Module):
         x = (x * g) + b  # Then apply conditional affine
         return x
 
+#Define a TCN Block (made up of Conv1dCausal+FiLM)
 class TCNBlock(nn.Module):
     def __init__(self,
                  in_ch: int,
@@ -100,6 +107,7 @@ class TCNBlock(nn.Module):
         x += x_res
         return x
 
+#Model is a series of TCN blocks
 class TCN(nn.Module):
     def __init__(self,
                  channels: List[int],
@@ -159,16 +167,12 @@ class TCN(nn.Module):
         return rf
 
 # upload clean input
-
-#input_upload = f #files.upload()
 input_file = './clean.wav' #list(input_upload.keys())[-1]
 x, sample_rate = torchaudio.load(input_file)
 print(input_file, x.shape)
 IPython.display.display(IPython.display.Audio(data=x, rate=sample_rate))
 
 # upload the same file processed with an effect
-
-#output_upload = files.upload()
 output_file = './effect.wav' #list(output_upload.keys())[-1]
 y, sample_rate = torchaudio.load(output_file)
 print(output_file, y.shape)
@@ -188,16 +192,16 @@ if not y.shape[-1] == x.shape[-1]:
 proc_x = x[None, 0:1, :]
 proc_y = y[None, 0:1, :]
 
-
 cond_dim = 3 # it has to be 3
 
-n_iters = 5000 #@param {type:"slider", min:0, max:10000, step:1}
-lr = 0.002 #@param {type:"number"}
-slice_len = 300000 #@param {type:"number"}
-dilation_growth = 2 #@param {type:"number"}
-n_layers = 10 #@param {type:"number"}
-n_channels = 10 #@param {type:"number"}
-#crop = Ran8omCrop((slice_len,1)) # randomly crop audio
+n_iters = 5000 # min:0, max:10000
+lr = 0.002 # number
+slice_len = 300000 # number
+dilation_growth = 8 # number
+n_layers = 10 # number
+n_channels = 20 # number
+alpha = 0.01 # min:0, max:1 balance between two loss functions
+
 if torch.cuda.is_available():
     device = "cuda"
 else:
@@ -208,15 +212,16 @@ slice_len = min(x.shape[-1], slice_len)
 c = torch.zeros(1, cond_dim, device=device, requires_grad=False)
 _, x_ch, x_samp = proc_x.shape
 _, y_ch, y_samp = proc_y.shape
-# build the model
+
+# define model
 model = TCN(channels=[n_channels] * n_layers,
             cond_dim=cond_dim,
             dilations=[dilation_growth ** idx for idx in range(n_layers)]
             )
 
 rf = model.calc_receptive_field()
-params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
+params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f"Parameters: {params*1e-3:0.3f} k")
 
 # setup loss function, optimizer, and scheduler
@@ -224,6 +229,7 @@ loss_fn = auraloss.freq.MultiResolutionSTFTLoss(
     fft_sizes=[32, 128, 512, 2048],
     win_lengths=[32, 128, 512, 2048],
     hop_sizes=[16, 64, 256, 1024])
+
 loss_fn_l1 = torch.nn.L1Loss()
 
 optimizer = torch.optim.Adam(model.parameters(), lr)
@@ -253,9 +259,9 @@ if torch.cuda.is_available():
     c = c.to(device)
 
 # iteratively update the weights
-#pbar = tqdm(range(n_iters))
 losses = []
-for n in range(n_iters):#pbar:
+
+for n in range(n_iters):
     optimizer.zero_grad()
     # crop both input/output randomly
     start_idx = torch.randint(0, proc_x.shape[-1]-slice_len, (1,))[0]
@@ -264,19 +270,16 @@ for n in range(n_iters):#pbar:
     y_hat = model(x_crop, c)
     # crop output bc first rf samples don't have proper context
     try:
-        loss = loss_fn(y_hat[..., rf:], y_crop[..., rf:])
+        loss = (1-alpha)*loss_fn(y_hat[..., rf:], y_crop[..., rf:]) + alpha*loss_fn_l1(y_hat[..., rf:], y_crop[..., rf:])
     except Exception as e:
-    	#print('error: ', e)
-        print('Errore nel calcolo del receptive field: ', rf)
-        break
-    #loss = loss_fn(y_hat[..., rf:], y_crop[..., rf:])
+    	print('Exception: ', e)
+        sys.exit()
     loss.backward()
     losses.append(loss.detach().cpu())
     optimizer.step()
     scheduler.step()
-    if not (n%10): print('Loss:', loss.item())
-    #if (n+1) % 1 == 0:
-    #    pbar.set_description(f" Loss: {loss.item():0.3e} | ")
+    if not (n%10): print('Loss at n-th iteration:', loss.item())
+
 plt.title("Training loss over iterations")
 plt.plot(losses)
 plt.savefig('training_loss.png')
@@ -417,7 +420,7 @@ class TCNModelWrapper(WaveformToWaveformBase):
         x = x.squeeze(1)
         return x
 
-from pathlib import Path
+
 model.eval()
 model = torch.jit.script(model.to('cpu'))
 model(torch.zeros(2,1,4096), torch.zeros(2, 3))
