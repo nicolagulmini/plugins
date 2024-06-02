@@ -195,12 +195,12 @@ proc_y = y[None, 0:1, :]
 cond_dim = 3 # it has to be 3
 
 n_iters = 5000 # min:0, max:10000
-lr = 0.002 # number
-slice_len = 100000 # number
-dilation_growth = 8 # number
-n_layers = 5 # number
-n_channels = 12 # number
-alpha = 0.01 # min:0, max:1 balance between two loss functions
+lr = 0.001 # number
+slice_len = 240000 # number
+dilation_growth = 4 # number
+n_layers = 6 # number
+n_channels = 8 # number
+alpha = 0.5 # min:0, max:1 balance between two loss functions
 
 if torch.cuda.is_available():
     device = "cuda"
@@ -278,7 +278,7 @@ for n in range(n_iters):
     losses.append(loss.detach().cpu())
     optimizer.step()
     scheduler.step()
-    if not (n%10): print('Loss at n-th iteration:', loss.item())
+    if not (n%10): print('Loss at', n, '-th iteration:', loss.item())
 
 plt.title("Training loss over iterations")
 plt.plot(losses)
