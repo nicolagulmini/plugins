@@ -4,7 +4,4 @@ Excited to unveil my very first plugin to the world! 🌟 I've dedicated my time
 
 ![Screenshot 2024-02-17 at 4 15 10 PM](https://github.com/nicolagulmini/plugins/assets/62892813/421a0067-b131-42dc-b9b5-61a10b14d12c)
 
-TODO:
-- improve distortion, add compression
-- parameters' values management
-- Logic Pro validation errors
+Update 7th June 2024: project CLOSED, the vision has been inherited by the plugin ANTARCTICA. 
