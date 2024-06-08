@@ -7,22 +7,30 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
 {
     // treeState
     gainSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, GAIN_ID, gainSlider);
+    setCustomSliderStyle(gainSlider, 0, GAIN_NAME);
+
+    distSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DRIVE_ID, distSlider);
+    setCustomSliderStyle(distSlider, 0, DRIVE_NAME);
     
+    bitSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, BIT_ID, bitSlider);
+    setCustomSliderStyle(bitSlider, 0, BIT_NAME);
     
-    // knobs
-    setCustomSliderStyle(gainSlider, 0, "Gain", -6.0f, 12.0f, audioProcessor.gainVal);
-    setCustomSliderStyle(distSlider, 0, "Drive", 0.1f, 11.0f, audioProcessor.distVal);
-    setCustomSliderStyle(bitSlider, 0, "Bit", 0.0f, 30.0f, audioProcessor.bitVal);
-    setCustomSliderStyle(downSampleSlider, 0, "Downsample", 0.1f, 50.0f, audioProcessor.downSampleVal);
-    setCustomSliderStyle(drywetSlider, 0, "Dry/Wet", 0.0f, 100.0f, audioProcessor.drywetPercentageVal);
+    downSampleSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DWNSMP_ID, downSampleSlider);
+    setCustomSliderStyle(downSampleSlider, 0, DWNSMP_NAME);
+    
+    gainSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DRYWET_ID, drywetSlider);
+    setCustomSliderStyle(drywetSlider, 0, DRYWET_NAME);
     
     // dev
     //setCustomSliderStyle(preLowPass, 0, "Pre Low Pass Filter", 20.0f, 20000.0f, audioProcessor.filterAfterProcessFreq);
     // no knob for this
     
     // linear vertical
-    setCustomSliderStyle(inputSlider, 1, "in", 0.0f, 1.0f, audioProcessor.inputVal);
-    setCustomSliderStyle(outputSlider, 1, "out", 0.0f, 1.0f, audioProcessor.outputVal);
+    inputSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, INPUT_ID, inputSlider);
+    setCustomSliderStyle(inputSlider, 1, INPUT_NAME);
+    
+    outputSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, OUTPUT_ID, outputSlider);
+    setCustomSliderStyle(outputSlider, 1, OUTPUT_NAME);
         
     // buttons
     setCustomButtonStyle(gainButton, "Gain Switcher", true);
@@ -49,7 +57,7 @@ void ANTARCTICAAudioProcessorEditor::setCustomButtonStyle(Button& b, String name
     b.addListener(this);
 }
 
-void ANTARCTICAAudioProcessorEditor::setCustomSliderStyle(Slider& s, int type, String name, double rangeStart, double rangeEnd, double value)
+void ANTARCTICAAudioProcessorEditor::setCustomSliderStyle(Slider& s, int type, String name)
 {
     s.setName(name);
     
@@ -59,10 +67,7 @@ void ANTARCTICAAudioProcessorEditor::setCustomSliderStyle(Slider& s, int type, S
         s.setSliderStyle(Slider::SliderStyle::LinearVertical);
 
     s.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 50, 20);
-    s.setRange(rangeStart, rangeEnd);
-    s.setValue(value);
     addAndMakeVisible(&s);
-    s.addListener(this);
 }
 
 //==============================================================================
@@ -170,41 +175,17 @@ void ANTARCTICAAudioProcessorEditor::resized()
 
 void ANTARCTICAAudioProcessorEditor::sliderValueChanged (Slider *slider)
 {
-    if (slider == &gainSlider)
+    if (slider == &bitSlider)
     {
-        audioProcessor.gainVal = gainSlider.getValue();
-    }
-    else if (slider == &bitSlider)
-    {
-        audioProcessor.bitVal = int(bitSlider.getValue());
         sinPlot.setBit(int(bitSlider.getValue()));
     }
     else if (slider == &downSampleSlider)
     {
-        audioProcessor.downSampleVal = downSampleSlider.getValue();
         sinPlot.setDownSampleValue(downSampleSlider.getValue());
-    }
-    else if (slider == &distSlider)
-    {
-        audioProcessor.distVal = distSlider.getValue();
     }
     else if (slider == &drywetSlider)
     {
-        audioProcessor.drywetPercentageVal = drywetSlider.getValue();
         sinPlot.setPercentageDryWet(drywetSlider.getValue()/100);
-    }
-    else if (slider == &inputSlider)
-    {
-        audioProcessor.inputVal = inputSlider.getValue();
-    }
-    else if (slider == &outputSlider)
-    {
-        audioProcessor.outputVal = outputSlider.getValue();
-    }
-    // dev
-    else if (slider == &preLowPass) // always false
-    {
-        audioProcessor.filterAfterProcessFreq = preLowPass.getValue();
     }
 }
 

@@ -23,8 +23,28 @@ ANTARCTICAAudioProcessor::~ANTARCTICAAudioProcessor()
 AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createParameterLayout()
 {
     std::vector <std::unique_ptr<RangedAudioParameter>> params;
+    
     auto gainParams = std::make_unique<AudioParameterFloat>(GAIN_ID, GAIN_NAME, -6.0f, 12.0f, 0.0f);
     params.push_back(std::move(gainParams));
+    
+    auto driveParams = std::make_unique<AudioParameterFloat>(DRIVE_ID, DRIVE_NAME, 0.0f, 12.0f, 0.0f);
+    params.push_back(std::move(driveParams));
+    
+    auto bitParams = std::make_unique<AudioParameterFloat>(BIT_ID, BIT_NAME, 0.0f, 30.0f, 0.0f);
+    params.push_back(std::move(bitParams));
+    
+    auto downsampleParams = std::make_unique<AudioParameterFloat>(DWNSMP_ID, DWNSMP_NAME, 0.0f, 50.0f, 0.0f);
+    params.push_back(std::move(downsampleParams));
+    
+    auto drywetParams = std::make_unique<AudioParameterFloat>(DRYWET_ID, DRYWET_NAME, 0.0f, 100.0f, 100.0f);
+    params.push_back(std::move(drywetParams));
+    
+    auto inputParams = std::make_unique<AudioParameterFloat>(INPUT_ID, INPUT_NAME, 0.0f, 1.0f, 1.0f);
+    params.push_back(std::move(inputParams));
+    
+    auto outputParams = std::make_unique<AudioParameterFloat>(OUTPUT_ID, OUTPUT_NAME, 0.0f, 1.0f, 1.0f);
+    params.push_back(std::move(outputParams));
+    
     return {params.begin(), params.end()};
 }
 
@@ -158,19 +178,17 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
             float toProcessVal, backupVal, finalVal, toProcessValBeforeDistortion;
-            channelData[sample] *= inputVal;
+            channelData[sample] *= treeState.getRawParameterValue(INPUT_ID)->load();
             toProcessVal = backupVal = finalVal = toProcessValBeforeDistortion = channelData[sample];
 
             if (gainSwitch)
-            {
-                auto gainValue = treeState.getRawParameterValue(GAIN_ID)->load();
-                toProcessVal *= Decibels::decibelsToGain(gainValue);
-            }
+                toProcessVal *= Decibels::decibelsToGain(treeState.getRawParameterValue(GAIN_ID)->load());
                 
             toProcessValBeforeDistortion = toProcessVal;
             if (distSwitch)
-                toProcessVal = tanh(distVal * toProcessVal);
+                toProcessVal = tanh(treeState.getRawParameterValue(DRIVE_ID)->load() * toProcessVal);
             
+            // lil compression (not parametrized)
             if (abs(toProcessVal) > 1.3*abs(toProcessValBeforeDistortion))
             {
                 float compressedSample = 1.3*toProcessValBeforeDistortion + (toProcessVal - 1.3*toProcessValBeforeDistortion) / 3.5;
@@ -178,22 +196,22 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             }
             
             if (bitSwitch)
-                toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-bitVal)+1)));
+                toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-treeState.getRawParameterValue(BIT_ID)->load())+1)));
 
             finalVal = toProcessVal;
             
             if (downSampleSwitch)
             {
-                int step = int(buffer.getNumSamples()*pow(1.08, downSampleVal)/100);
+                int step = int(buffer.getNumSamples()*pow(1.08, treeState.getRawParameterValue(DWNSMP_ID)->load())/100);
                 int stepIndex = sample%step; // from 0 to step-1
                 finalVal = channelData[sample - stepIndex]*(1-stepIndex/(step-1))+toProcessVal*stepIndex/(step-1);
             }
             
-            // lil saturation
+            // lil saturation (not parametrized)
             float saturationAmount = 2.0f;
             toProcessVal = toProcessVal * (1.0f + saturationAmount) / (1.0f + saturationAmount * abs(toProcessVal));
                         
-            channelData[sample] = outputVal*(finalVal*(drywetPercentageVal/100)+backupVal*(1-drywetPercentageVal/100));
+            channelData[sample] = treeState.getRawParameterValue(OUTPUT_ID)->load()*(finalVal*(treeState.getRawParameterValue(DRYWET_ID)->load()/100)+backupVal*(1-treeState.getRawParameterValue(DRYWET_ID)->load()/100));
         }
     }
     dsp::AudioBlock<float> block (buffer);
