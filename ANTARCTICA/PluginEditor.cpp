@@ -9,39 +9,23 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     setCustomSliderStyle(gainSlider, 0, "Gain", -6.0f, 12.0f, audioProcessor.gainVal);
     setCustomSliderStyle(distSlider, 0, "Drive", 0.1f, 11.0f, audioProcessor.distVal);
     setCustomSliderStyle(bitSlider, 0, "Bit", 0.0f, 30.0f, audioProcessor.bitVal);
-    setCustomSliderStyle(downSampleSlider, 0, "Downsample", 1.0f, 50.0f, audioProcessor.downSampleVal);
+    setCustomSliderStyle(downSampleSlider, 0, "Downsample", 0.1f, 50.0f, audioProcessor.downSampleVal);
     setCustomSliderStyle(drywetSlider, 0, "Dry/Wet", 0.0f, 100.0f, audioProcessor.drywetPercentageVal);
+    
+    // dev
+    //setCustomSliderStyle(preLowPass, 0, "Pre Low Pass Filter", 20.0f, 20000.0f, audioProcessor.filterAfterProcessFreq);
+    // no knob for this
     
     // linear vertical
     setCustomSliderStyle(inputSlider, 1, "in", 0.0f, 1.0f, audioProcessor.inputVal);
     setCustomSliderStyle(outputSlider, 1, "out", 0.0f, 1.0f, audioProcessor.outputVal);
         
     // buttons
-    
-    gainButton.setName("Gain Switcher");
-    gainButton.setToggleState(true, NotificationType::dontSendNotification);
-    gainButton.setClickingTogglesState(true);
-    addAndMakeVisible(&gainButton);
-    gainButton.addListener(this);
-    
-    distButton.setName("Distortion Switcher");
-    distButton.setToggleState(true, NotificationType::dontSendNotification);
-    distButton.setClickingTogglesState(true);
-    addAndMakeVisible(&distButton);
-    distButton.addListener(this);
-    
-    crushButton.setName("Crush Switcher");
-    crushButton.setToggleState(true, NotificationType::dontSendNotification);
-    crushButton.setClickingTogglesState(true);
-    addAndMakeVisible(&crushButton);
-    crushButton.addListener(this);
-    
-    downSampleButton.setName("DWNSMPL Switcher");
-    downSampleButton.setToggleState(true, NotificationType::dontSendNotification);
-    downSampleButton.setClickingTogglesState(true);
-    addAndMakeVisible(&downSampleButton);
-    downSampleButton.addListener(this);
-    
+    setCustomButtonStyle(gainButton, "Gain Switcher", true);
+    setCustomButtonStyle(distButton, "Distortion Switcher", true);
+    setCustomButtonStyle(crushButton, "Crush Switcher", true);
+    setCustomButtonStyle(downSampleButton, "DWNSMPL Switcher", true);
+
     sinPlot.setName("sin plot");
     addAndMakeVisible(sinPlot);
     
@@ -50,6 +34,15 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
 
 ANTARCTICAAudioProcessorEditor::~ANTARCTICAAudioProcessorEditor()
 {
+}
+
+void ANTARCTICAAudioProcessorEditor::setCustomButtonStyle(Button& b, String name, bool state)
+{
+    b.setName(name);
+    b.setToggleState(state, NotificationType::dontSendNotification);
+    b.setClickingTogglesState(state);
+    addAndMakeVisible(&b);
+    b.addListener(this);
 }
 
 void ANTARCTICAAudioProcessorEditor::setCustomSliderStyle(Slider& s, int type, String name, double rangeStart, double rangeEnd, double value)
@@ -79,41 +72,23 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     int wText = 100;
     int hText = 20;
     
+    auto drawTextSlider = [wText, hText, &g](Slider& s) {
+        g.drawText(s.getName(),
+                   s.getX() + s.getWidth()/2 - wText/2,
+                   s.getY() + s.getHeight() + 10,
+                   wText,
+                   hText,
+                   Justification::centred);
+    };
+    
     // knobs
-    g.drawText(gainSlider.getName(),
-               gainSlider.getX() + gainSlider.getWidth()/2 - wText/2,
-               gainSlider.getY() + gainSlider.getHeight() + 10,
-               wText,
-               hText,
-               Justification::centred);
-    
-    g.drawText(distSlider.getName(),
-               distSlider.getX() + distSlider.getWidth()/2 - wText/2,
-               distSlider.getY() + distSlider.getHeight() + 10,
-               wText,
-               hText,
-               Justification::centred);
-    
-    g.drawText(bitSlider.getName(),
-               bitSlider.getX() + bitSlider.getWidth()/2 - wText/2,
-               bitSlider.getY() + bitSlider.getHeight() + 10,
-               wText,
-               hText,
-               Justification::centred);
-    
-    g.drawText(downSampleSlider.getName(),
-               downSampleSlider.getX() + downSampleSlider.getWidth()/2- wText/2,
-               downSampleSlider.getY() + downSampleSlider.getHeight() + 10,
-               wText,
-               hText,
-               Justification::centred);
-    
-    g.drawText(drywetSlider.getName(),
-               drywetSlider.getX() + drywetSlider.getWidth()/2 - wText/2,
-               drywetSlider.getY() + drywetSlider.getHeight() + 10,
-               wText,
-               hText,
-               Justification::centred);
+    drawTextSlider(gainSlider);
+    drawTextSlider(distSlider);
+    drawTextSlider(bitSlider);
+    drawTextSlider(downSampleSlider);
+    drawTextSlider(drywetSlider);
+    // dev
+    //drawTextSlider(preLowPass);
     
     // buttons
     g.drawText(inputSlider.getName(),
@@ -173,6 +148,9 @@ void ANTARCTICAAudioProcessorEditor::resized()
     downSampleSlider.setBounds(bitSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     drywetSlider.setBounds(downSampleSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     
+    // dev
+    //preLowPass.setBounds(0, 400, knobsDim, knobsDim);
+    
     inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     outputSlider.setBounds(drywetSlider.getX()+knobsDim+knobsMargin, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     
@@ -218,6 +196,11 @@ void ANTARCTICAAudioProcessorEditor::sliderValueChanged (Slider *slider)
     else if (slider == &outputSlider)
     {
         audioProcessor.outputVal = outputSlider.getValue();
+    }
+    // dev
+    else if (slider == &preLowPass) // always false
+    {
+        audioProcessor.filterAfterProcessFreq = preLowPass.getValue();
     }
 }
 
