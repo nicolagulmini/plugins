@@ -5,6 +5,10 @@
 ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
+    // treeState
+    gainSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, GAIN_ID, gainSlider);
+    
+    
     // knobs
     setCustomSliderStyle(gainSlider, 0, "Gain", -6.0f, 12.0f, audioProcessor.gainVal);
     setCustomSliderStyle(distSlider, 0, "Drive", 0.1f, 11.0f, audioProcessor.distVal);

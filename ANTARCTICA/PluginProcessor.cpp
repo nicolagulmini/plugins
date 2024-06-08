@@ -11,14 +11,21 @@ ANTARCTICAAudioProcessor::ANTARCTICAAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ), treeState(*this, nullptr), afterProcessingLowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, filterAfterProcessFreq))//, waveViewer(1)
+                       ), treeState(*this, nullptr, "PARAMETERS TREESTATE", createParameterLayout()), afterProcessingLowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, filterAfterProcessFreq))//, waveViewer(1)
 #endif
 {
-    NormalisableRange<float> gainRange (-6.0f, 12.0f);
 }
 
 ANTARCTICAAudioProcessor::~ANTARCTICAAudioProcessor()
 {
+}
+
+AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createParameterLayout()
+{
+    std::vector <std::unique_ptr<RangedAudioParameter>> params;
+    auto gainParams = std::make_unique<AudioParameterFloat>(GAIN_ID, GAIN_NAME, -6.0f, 12.0f, 0.0f);
+    params.push_back(std::move(gainParams));
+    return {params.begin(), params.end()};
 }
 
 //==============================================================================
@@ -155,8 +162,11 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             toProcessVal = backupVal = finalVal = toProcessValBeforeDistortion = channelData[sample];
 
             if (gainSwitch)
-                toProcessVal *= Decibels::decibelsToGain(gainVal);
-            
+            {
+                auto gainValue = treeState.getRawParameterValue(GAIN_ID)->load();
+                toProcessVal *= Decibels::decibelsToGain(gainValue);
+            }
+                
             toProcessValBeforeDistortion = toProcessVal;
             if (distSwitch)
                 toProcessVal = tanh(distVal * toProcessVal);
