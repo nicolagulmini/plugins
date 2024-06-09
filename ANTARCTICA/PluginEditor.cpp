@@ -6,6 +6,7 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     // treeState
+    
     gainSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, GAIN_ID, gainSlider);
     setCustomSliderStyle(gainSlider, 0, GAIN_NAME);
 
@@ -14,12 +15,15 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     
     bitSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, BIT_ID, bitSlider);
     setCustomSliderStyle(bitSlider, 0, BIT_NAME);
+    audioProcessor.treeState.addParameterListener(BIT_ID, this);
     
     downSampleSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DWNSMP_ID, downSampleSlider);
     setCustomSliderStyle(downSampleSlider, 0, DWNSMP_NAME);
+    audioProcessor.treeState.addParameterListener(DWNSMP_ID, this);
     
     gainSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DRYWET_ID, drywetSlider);
     setCustomSliderStyle(drywetSlider, 0, DRYWET_NAME);
+    audioProcessor.treeState.addParameterListener(DRYWET_ID, this);
     
     // dev
     //setCustomSliderStyle(preLowPass, 0, "Pre Low Pass Filter", 20.0f, 20000.0f, audioProcessor.filterAfterProcessFreq);
@@ -31,13 +35,21 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     
     outputSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, OUTPUT_ID, outputSlider);
     setCustomSliderStyle(outputSlider, 1, OUTPUT_NAME);
-        
+    
     // buttons
-    setCustomButtonStyle(gainButton, "Gain Switcher", true);
-    setCustomButtonStyle(distButton, "Distortion Switcher", true);
-    setCustomButtonStyle(crushButton, "Crush Switcher", true);
-    setCustomButtonStyle(downSampleButton, "DWNSMPL Switcher", true);
-
+    auto configureButton = [this](String ID, String NAME, RedSwitcher& button) {
+        auto attachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.treeState, ID, button);
+        setCustomButtonStyle(button, NAME);
+        audioProcessor.treeState.addParameterListener(ID, this);
+        return attachment;
+    };
+    
+    gainButtonValue = configureButton(GAIN_BTN_ID, GAIN_BTN_NAME, gainButton);
+    distButtonValue = configureButton(DRIVE_BTN_ID, DRIVE_BTN_NAME, distButton);
+    crushButtonValue = configureButton(BIT_BTN_ID, BIT_BTN_NAME, crushButton);
+    downSampleButtonValue = configureButton(DWNSMP_BTN_ID, DWNSMP_BTN_NAME, downSampleButton);
+    
+    // sin plot
     sinPlot.setName("sin plot");
     addAndMakeVisible(sinPlot);
     
@@ -46,15 +58,48 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
 
 ANTARCTICAAudioProcessorEditor::~ANTARCTICAAudioProcessorEditor()
 {
+    audioProcessor.treeState.removeParameterListener(BIT_ID, this);
+    audioProcessor.treeState.removeParameterListener(DWNSMP_ID, this);
+    audioProcessor.treeState.removeParameterListener(DRYWET_ID, this);
+    audioProcessor.treeState.removeParameterListener(GAIN_BTN_ID, this);
+    audioProcessor.treeState.removeParameterListener(DRIVE_BTN_ID, this);
+    audioProcessor.treeState.removeParameterListener(BIT_BTN_ID, this);
+    audioProcessor.treeState.removeParameterListener(DWNSMP_BTN_ID, this);
 }
 
-void ANTARCTICAAudioProcessorEditor::setCustomButtonStyle(Button& b, String name, bool state)
+void ANTARCTICAAudioProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    // sliders
+    if (parameterID == DWNSMP_ID)
+        sinPlot.setDownSampleValue(newValue);
+    else if (parameterID == BIT_ID)
+        sinPlot.setBit(int(newValue));
+    else if (parameterID == DRYWET_ID)
+        sinPlot.setPercentageDryWet(newValue/100);
+    
+    // buttons
+    else if (parameterID == GAIN_BTN_ID)
+        gainSlider.setEnabled(gainButton.getToggleState());
+    else if (parameterID == DRIVE_BTN_ID)
+        distSlider.setEnabled(distButton.getToggleState());
+    else if (parameterID == BIT_BTN_ID)
+    {
+        bitSlider.setEnabled(crushButton.getToggleState());
+        sinPlot.setIsBitCrushing(crushButton.getToggleState());
+    }
+    else if (parameterID == DWNSMP_BTN_ID)
+    {
+        downSampleSlider.setEnabled(downSampleButton.getToggleState());
+        sinPlot.setIsDownSampling(downSampleButton.getToggleState());
+    }
+}
+
+
+void ANTARCTICAAudioProcessorEditor::setCustomButtonStyle(Button& b, String name)
 {
     b.setName(name);
-    b.setToggleState(state, NotificationType::dontSendNotification);
-    b.setClickingTogglesState(state);
+    b.setToggleState(true, NotificationType::dontSendNotification);
     addAndMakeVisible(&b);
-    b.addListener(this);
 }
 
 void ANTARCTICAAudioProcessorEditor::setCustomSliderStyle(Slider& s, int type, String name)
@@ -171,46 +216,4 @@ void ANTARCTICAAudioProcessorEditor::resized()
     
     //audioProcessor.waveViewer.setBounds(sliderWidth/2, 200, 400, 200);
     sinPlot.setBounds(inputSlider.getX()+inputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth(), 300);
-}
-
-void ANTARCTICAAudioProcessorEditor::sliderValueChanged (Slider *slider)
-{
-    if (slider == &bitSlider)
-    {
-        sinPlot.setBit(int(bitSlider.getValue()));
-    }
-    else if (slider == &downSampleSlider)
-    {
-        sinPlot.setDownSampleValue(downSampleSlider.getValue());
-    }
-    else if (slider == &drywetSlider)
-    {
-        sinPlot.setPercentageDryWet(drywetSlider.getValue()/100);
-    }
-}
-
-void ANTARCTICAAudioProcessorEditor::buttonClicked (Button *button)
-{
-    if (button == &gainButton)
-    {
-        audioProcessor.gainSwitch = gainButton.getToggleState();
-        gainSlider.setEnabled(gainButton.getToggleState());
-    }
-    else if (button == &distButton)
-    {
-        audioProcessor.distSwitch = distButton.getToggleState();
-        distSlider.setEnabled(distButton.getToggleState());
-    }
-    else if (button == &crushButton)
-    {
-        audioProcessor.bitSwitch = crushButton.getToggleState();
-        bitSlider.setEnabled(crushButton.getToggleState());
-        sinPlot.setIsBitCrushing(crushButton.getToggleState());
-    }
-    else if (button == &downSampleButton)
-    {
-        audioProcessor.downSampleSwitch = downSampleButton.getToggleState();
-        downSampleSlider.setEnabled(downSampleButton.getToggleState());
-        sinPlot.setIsDownSampling(downSampleButton.getToggleState());
-    }
 }

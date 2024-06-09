@@ -50,18 +50,13 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    void updateLowPassFilter(float freq);
-    
-    float filterAfterProcessFreq {6000.0f};
-    bool gainSwitch {true};
-    bool bitSwitch {true};
-    bool downSampleSwitch {true};
-    bool distSwitch {true};
-    
     AudioProcessorValueTreeState treeState;
     AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     
 private:
+    void updateLowPassFilter(float freq);
+    float filterAfterProcessFreq {6000.0f};
+
     float lastSampleRate;
     dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> afterProcessingLowPassFilter;
     //==============================================================================

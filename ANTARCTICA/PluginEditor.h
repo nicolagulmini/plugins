@@ -22,13 +22,22 @@
 #define OUTPUT_ID "output"
 #define OUTPUT_NAME "Output"
 
+#define GAIN_BTN_ID "gain_btn"
+#define GAIN_BTN_NAME "Gain Button"
+#define DRIVE_BTN_ID "drive_btn"
+#define DRIVE_BTN_NAME "Drive Button"
+#define BIT_BTN_ID "bitcrusher_btn"
+#define BIT_BTN_NAME "Bit Button"
+#define DWNSMP_BTN_ID "downsample_btn"
+#define DWNSMP_BTN_NAME "Downsample Button"
+
 using juce::Slider;
 using juce::ToggleButton;
 
 //==============================================================================
 /**
 */
-class ANTARCTICAAudioProcessorEditor  : public juce::AudioProcessorEditor, public Slider::Listener, public Button::Listener
+class ANTARCTICAAudioProcessorEditor  : public juce::AudioProcessorEditor, public AudioProcessorValueTreeState::Listener
 {
 public:
     ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioProcessor&);
@@ -37,12 +46,10 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
-    void sliderValueChanged(Slider*) override;
-    void buttonClicked(Button*) override;
 
 private:
     void setCustomSliderStyle(Slider& s, int type, String name);
-    void setCustomButtonStyle(Button& s, String name, bool state);
+    void setCustomButtonStyle(Button& s, String name);
     
     pearlSlider gainSlider;
     pearlSlider distSlider;
@@ -67,6 +74,9 @@ private:
     ANTARCTICAAudioProcessor& audioProcessor;
     
 public:
+    
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
+    
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> gainSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> distSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> bitSliderValue;
@@ -74,6 +84,11 @@ public:
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> drywetSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> outputSliderValue;
+    
+    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> gainButtonValue;
+    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> distButtonValue;
+    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> crushButtonValue;
+    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> downSampleButtonValue;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ANTARCTICAAudioProcessorEditor)
 };
