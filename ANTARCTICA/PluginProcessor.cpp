@@ -176,14 +176,20 @@ void ANTARCTICAAudioProcessor::updateLowPassFilter(float freq)
     *afterProcessingLowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq);
 }
 
-void ANTARCTICAAudioProcessor::updateParam(float localParam, String ID_PARAM, String ID_BTN)
-{
+void ANTARCTICAAudioProcessor::updateParam(float& localParam, String ID_PARAM, String ID_BTN)
+{ // let's suppose that ID_PARAM and ID_BTN exist...
     // smooth update
     float treeStateParam = treeState.getRawParameterValue(ID_PARAM)->load();
+    
+    if(ID_BTN.length()>0 && !treeState.getRawParameterValue(ID_BTN)->load())
+        treeStateParam = 0; // not default, just to prevent sharpness
+    
     if (abs(localParam-treeStateParam) < EPSILON)
-        local_input = treeStateParam;
+        localParam = treeStateParam;
+    else if (localParam > treeStateParam)
+        localParam -= EPSILON;
     else
-        local_input = local_input*0.9+treeStateParam*0.1;
+        localParam += EPSILON;
 }
 
 void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -209,37 +215,44 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             
             toProcessVal = backupVal = finalVal = toProcessValBeforeProcessing = channelData[sample];
             
+            updateParam(local_gain, GAIN_ID, GAIN_BTN_ID);
             if (treeState.getRawParameterValue(GAIN_BTN_ID)->load())
-                toProcessVal *= Decibels::decibelsToGain(treeState.getRawParameterValue(GAIN_ID)->load());
+                toProcessVal *= Decibels::decibelsToGain(local_gain);
             
             toProcessValBeforeProcessing = toProcessVal;
+            
+            updateParam(local_drive, DRIVE_ID, DRIVE_BTN_ID);
             if (treeState.getRawParameterValue(DRIVE_BTN_ID)->load())
             {
-                toProcessVal = tanh(treeState.getRawParameterValue(DRIVE_ID)->load() * toProcessVal);
+                toProcessVal = tanh(local_drive * toProcessVal);
             }
             
+            updateParam(local_dwnsmp, DWNSMP_ID, DWNSMP_BTN_ID);
             if (treeState.getRawParameterValue(DWNSMP_BTN_ID)->load())
             {
-                int step = int(buffer.getNumSamples()*pow(1.08, treeState.getRawParameterValue(DWNSMP_ID)->load())/100);
+                int step = int(buffer.getNumSamples()*pow(1.08, local_dwnsmp)/100);
                 int stepIndex = sample%step; // from 0 to step-1
                 if (stepIndex)
                     toProcessVal = channelData[sample - stepIndex];
             }
-        
+            
+            updateParam(local_bit, BIT_ID, BIT_BTN_ID);
             if (treeState.getRawParameterValue(BIT_BTN_ID)->load())
-                toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-treeState.getRawParameterValue(BIT_ID)->load())+1)));
+                toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-local_bit)+1)));
             
             // lil compression (not parametrized)
-            if (abs(toProcessVal) > 1.3*abs(toProcessValBeforeProcessing))
+            if (abs(toProcessVal) > 1.5*abs(toProcessValBeforeProcessing))
             {
-                float compressedSample = 1.3*toProcessValBeforeProcessing + (toProcessVal - 1.3*toProcessValBeforeProcessing) / 3.5;
+                float compressedSample = 1.5*toProcessValBeforeProcessing + (toProcessVal - 1.5*toProcessValBeforeProcessing) / 3.5;
                 toProcessVal = (toProcessVal < 0.0f) ? -compressedSample : compressedSample;
             }
             // lil saturation (not parametrized)
             float saturationAmount = 2.0f;
             finalVal = toProcessVal * (1.0f + saturationAmount) / (1.0f + saturationAmount * abs(toProcessVal));
             
-            channelData[sample] = Decibels::decibelsToGain(treeState.getRawParameterValue(OUTPUT_ID)->load())*(finalVal*(treeState.getRawParameterValue(DRYWET_ID)->load()/100)+backupVal*(1-treeState.getRawParameterValue(DRYWET_ID)->load()/100));
+            updateParam(local_output, OUTPUT_ID, "");
+            updateParam(local_drywet, DRYWET_ID, "");
+            channelData[sample] = Decibels::decibelsToGain(local_output)*(finalVal*(local_drywet/100)+backupVal*(1-local_drywet/100));
              
         }
     }
