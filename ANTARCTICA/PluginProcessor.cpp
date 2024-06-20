@@ -23,42 +23,42 @@ ANTARCTICAAudioProcessor::~ANTARCTICAAudioProcessor()
 AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createParameterLayout()
 {
     std::vector <std::unique_ptr<RangedAudioParameter>> params;
-    
+
     // sliders
-    auto gainParams = std::make_unique<AudioParameterFloat>(GAIN_ID, GAIN_NAME, -6.0f, 12.0f, 0.0f);
+    auto gainParams = std::make_unique<AudioParameterFloat>(ParameterID{GAIN_ID,1}, GAIN_NAME, 0.0f, 12.0f, local_gain);
     params.push_back(std::move(gainParams));
     
-    auto driveParams = std::make_unique<AudioParameterFloat>(DRIVE_ID, DRIVE_NAME, 0.0f, 12.0f, 0.0f);
+    auto driveParams = std::make_unique<AudioParameterFloat>(ParameterID{DRIVE_ID,1}, DRIVE_NAME, 1.0f, 12.0f, local_drive);
     params.push_back(std::move(driveParams));
     
-    auto bitParams = std::make_unique<AudioParameterFloat>(BIT_ID, BIT_NAME, 0.0f, 30.0f, 0.0f);
+    auto bitParams = std::make_unique<AudioParameterFloat>(ParameterID{BIT_ID,1}, BIT_NAME, 0.0f, 30.0f, local_bit);
     params.push_back(std::move(bitParams));
     
-    auto downsampleParams = std::make_unique<AudioParameterFloat>(DWNSMP_ID, DWNSMP_NAME, 0.0f, 50.0f, 0.0f);
+    auto downsampleParams = std::make_unique<AudioParameterFloat>(ParameterID{DWNSMP_ID,1}, DWNSMP_NAME, 0.0f, 50.0f, local_dwnsmp);
     params.push_back(std::move(downsampleParams));
     
-    auto drywetParams = std::make_unique<AudioParameterFloat>(DRYWET_ID, DRYWET_NAME, 0.0f, 100.0f, 100.0f);
+    auto drywetParams = std::make_unique<AudioParameterFloat>(ParameterID{DRYWET_ID,1}, DRYWET_NAME, 0.0f, 100.0f, local_drywet);
     params.push_back(std::move(drywetParams));
     
-    auto inputParams = std::make_unique<AudioParameterFloat>(INPUT_ID, INPUT_NAME, 0.0f, 1.0f, 1.0f);
+    auto inputParams = std::make_unique<AudioParameterFloat>(ParameterID{INPUT_ID,1}, INPUT_NAME, -6.0f, 6.0f, local_input);
     params.push_back(std::move(inputParams));
     
-    auto outputParams = std::make_unique<AudioParameterFloat>(OUTPUT_ID, OUTPUT_NAME, 0.0f, 1.0f, 1.0f);
+    auto outputParams = std::make_unique<AudioParameterFloat>(ParameterID{OUTPUT_ID,1}, OUTPUT_NAME, -6.0f, 6.0f, local_output);
     params.push_back(std::move(outputParams));
     
     // buttons
-    auto gainButtonParams = std::make_unique<AudioParameterBool>(GAIN_BTN_ID, GAIN_BTN_NAME, true);
+    auto gainButtonParams = std::make_unique<AudioParameterBool>(ParameterID{GAIN_BTN_ID,1}, GAIN_BTN_NAME, true);
     params.push_back(std::move(gainButtonParams));
     
-    auto driveButtonParams = std::make_unique<AudioParameterBool>(DRIVE_BTN_ID, DRIVE_BTN_NAME, true);
+    auto driveButtonParams = std::make_unique<AudioParameterBool>(ParameterID{DRIVE_BTN_ID,1}, DRIVE_BTN_NAME, false);
     params.push_back(std::move(driveButtonParams));
     
-    auto bitButtonParams = std::make_unique<AudioParameterBool>(BIT_BTN_ID, BIT_BTN_NAME, true);
+    auto bitButtonParams = std::make_unique<AudioParameterBool>(ParameterID{BIT_BTN_ID,1}, BIT_BTN_NAME, true);
     params.push_back(std::move(bitButtonParams));
     
-    auto dwnsmpButtonParams = std::make_unique<AudioParameterBool>(DWNSMP_BTN_ID, DWNSMP_BTN_NAME, true);
+    auto dwnsmpButtonParams = std::make_unique<AudioParameterBool>(ParameterID{DWNSMP_BTN_ID,1}, DWNSMP_BTN_NAME, true);
     params.push_back(std::move(dwnsmpButtonParams));
-    
+
     // return vector
     return {params.begin(), params.end()};
 }
@@ -176,6 +176,16 @@ void ANTARCTICAAudioProcessor::updateLowPassFilter(float freq)
     *afterProcessingLowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq);
 }
 
+void ANTARCTICAAudioProcessor::updateParam(float localParam, String ID_PARAM, String ID_BTN)
+{
+    // smooth update
+    float treeStateParam = treeState.getRawParameterValue(ID_PARAM)->load();
+    if (abs(localParam-treeStateParam) < EPSILON)
+        local_input = treeStateParam;
+    else
+        local_input = local_input*0.9+treeStateParam*0.1;
+}
+
 void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     ScopedNoDenormals noDenormals;
@@ -192,44 +202,48 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            float toProcessVal, backupVal, finalVal, toProcessValBeforeDistortion;
-            channelData[sample] *= treeState.getRawParameterValue(INPUT_ID)->load();
-            toProcessVal = backupVal = finalVal = toProcessValBeforeDistortion = channelData[sample];
-            //DBG("gain button value:");
-            //DBG(treeState.getRawParameterValue(GAIN_BTN_ID)->load());
+            float toProcessVal, backupVal, finalVal, toProcessValBeforeProcessing;
+            
+            updateParam(local_input, INPUT_ID, "");
+            channelData[sample] *= Decibels::decibelsToGain(local_input);
+            
+            toProcessVal = backupVal = finalVal = toProcessValBeforeProcessing = channelData[sample];
+            
             if (treeState.getRawParameterValue(GAIN_BTN_ID)->load())
                 toProcessVal *= Decibels::decibelsToGain(treeState.getRawParameterValue(GAIN_ID)->load());
             
-            toProcessValBeforeDistortion = toProcessVal;
+            toProcessValBeforeProcessing = toProcessVal;
             if (treeState.getRawParameterValue(DRIVE_BTN_ID)->load())
-                toProcessVal = tanh(treeState.getRawParameterValue(DRIVE_ID)->load() * toProcessVal);
-            
-            // lil compression (not parametrized)
-            if (abs(toProcessVal) > 1.3*abs(toProcessValBeforeDistortion))
             {
-                float compressedSample = 1.3*toProcessValBeforeDistortion + (toProcessVal - 1.3*toProcessValBeforeDistortion) / 3.5;
-                toProcessVal = (toProcessVal < 0.0f) ? -compressedSample : compressedSample;
+                toProcessVal = tanh(treeState.getRawParameterValue(DRIVE_ID)->load() * toProcessVal);
             }
-            
-            if (treeState.getRawParameterValue(BIT_BTN_ID)->load())
-                toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-treeState.getRawParameterValue(BIT_ID)->load())+1)));
-            
-            finalVal = toProcessVal;
             
             if (treeState.getRawParameterValue(DWNSMP_BTN_ID)->load())
             {
                 int step = int(buffer.getNumSamples()*pow(1.08, treeState.getRawParameterValue(DWNSMP_ID)->load())/100);
                 int stepIndex = sample%step; // from 0 to step-1
-                finalVal = channelData[sample - stepIndex]*(1-stepIndex/(step-1))+toProcessVal*stepIndex/(step-1);
+                if (stepIndex)
+                    toProcessVal = channelData[sample - stepIndex];
             }
+        
+            if (treeState.getRawParameterValue(BIT_BTN_ID)->load())
+                toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-treeState.getRawParameterValue(BIT_ID)->load())+1)));
             
+            // lil compression (not parametrized)
+            if (abs(toProcessVal) > 1.3*abs(toProcessValBeforeProcessing))
+            {
+                float compressedSample = 1.3*toProcessValBeforeProcessing + (toProcessVal - 1.3*toProcessValBeforeProcessing) / 3.5;
+                toProcessVal = (toProcessVal < 0.0f) ? -compressedSample : compressedSample;
+            }
             // lil saturation (not parametrized)
             float saturationAmount = 2.0f;
-            toProcessVal = toProcessVal * (1.0f + saturationAmount) / (1.0f + saturationAmount * abs(toProcessVal));
+            finalVal = toProcessVal * (1.0f + saturationAmount) / (1.0f + saturationAmount * abs(toProcessVal));
             
-            channelData[sample] = treeState.getRawParameterValue(OUTPUT_ID)->load()*(finalVal*(treeState.getRawParameterValue(DRYWET_ID)->load()/100)+backupVal*(1-treeState.getRawParameterValue(DRYWET_ID)->load()/100));
+            channelData[sample] = Decibels::decibelsToGain(treeState.getRawParameterValue(OUTPUT_ID)->load())*(finalVal*(treeState.getRawParameterValue(DRYWET_ID)->load()/100)+backupVal*(1-treeState.getRawParameterValue(DRYWET_ID)->load()/100));
+             
         }
     }
+             
     dsp::AudioBlock<float> block (buffer);
     updateLowPassFilter(filterAfterProcessFreq);
     afterProcessingLowPassFilter.process(dsp::ProcessContextReplacing<float>(block));

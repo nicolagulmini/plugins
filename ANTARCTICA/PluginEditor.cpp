@@ -21,13 +21,9 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     setCustomSliderStyle(downSampleSlider, 0, DWNSMP_NAME);
     audioProcessor.treeState.addParameterListener(DWNSMP_ID, this);
     
-    gainSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DRYWET_ID, drywetSlider);
+    drywetSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DRYWET_ID, drywetSlider);
     setCustomSliderStyle(drywetSlider, 0, DRYWET_NAME);
     audioProcessor.treeState.addParameterListener(DRYWET_ID, this);
-    
-    // dev
-    //setCustomSliderStyle(preLowPass, 0, "Pre Low Pass Filter", 20.0f, 20000.0f, audioProcessor.filterAfterProcessFreq);
-    // no knob for this
     
     // linear vertical
     inputSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, INPUT_ID, inputSlider);
@@ -37,17 +33,18 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     setCustomSliderStyle(outputSlider, 1, OUTPUT_NAME);
     
     // buttons
-    auto configureButton = [this](String ID, String NAME, RedSwitcher& button) {
+    auto configureButton = [this](String ID, String NAME, RedSwitcher& button, Slider& relSlider) {
         auto attachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.treeState, ID, button);
-        setCustomButtonStyle(button, NAME);
+        setCustomButtonStyle(button, NAME, ID);
         audioProcessor.treeState.addParameterListener(ID, this);
+        relSlider.setEnabled(button.getToggleState());
         return attachment;
     };
     
-    gainButtonValue = configureButton(GAIN_BTN_ID, GAIN_BTN_NAME, gainButton);
-    distButtonValue = configureButton(DRIVE_BTN_ID, DRIVE_BTN_NAME, distButton);
-    crushButtonValue = configureButton(BIT_BTN_ID, BIT_BTN_NAME, crushButton);
-    downSampleButtonValue = configureButton(DWNSMP_BTN_ID, DWNSMP_BTN_NAME, downSampleButton);
+    gainButtonValue = configureButton(GAIN_BTN_ID, GAIN_BTN_NAME, gainButton, gainSlider);
+    distButtonValue = configureButton(DRIVE_BTN_ID, DRIVE_BTN_NAME, distButton, distSlider);
+    crushButtonValue = configureButton(BIT_BTN_ID, BIT_BTN_NAME, crushButton, bitSlider);
+    downSampleButtonValue = configureButton(DWNSMP_BTN_ID, DWNSMP_BTN_NAME, downSampleButton, downSampleSlider);
     
     // sin plot
     sinPlot.setName("sin plot");
@@ -70,6 +67,7 @@ ANTARCTICAAudioProcessorEditor::~ANTARCTICAAudioProcessorEditor()
 void ANTARCTICAAudioProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
 {
     // sliders
+    
     if (parameterID == DWNSMP_ID)
         sinPlot.setDownSampleValue(newValue);
     else if (parameterID == BIT_ID)
@@ -95,10 +93,10 @@ void ANTARCTICAAudioProcessorEditor::parameterChanged(const juce::String& parame
 }
 
 
-void ANTARCTICAAudioProcessorEditor::setCustomButtonStyle(Button& b, String name)
+void ANTARCTICAAudioProcessorEditor::setCustomButtonStyle(Button& b, String name, String id)
 {
     b.setName(name);
-    b.setToggleState(true, NotificationType::dontSendNotification);
+    b.setToggleState(audioProcessor.treeState.getRawParameterValue(id)->load(), NotificationType::dontSendNotification);
     addAndMakeVisible(&b);
 }
 
@@ -198,12 +196,9 @@ void ANTARCTICAAudioProcessorEditor::resized()
     // knobs
     gainSlider.setBounds(sliderWidth+knobsMargin, 0+knobsMargin, knobsDim, knobsDim);
     distSlider.setBounds(gainSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    bitSlider.setBounds(distSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    downSampleSlider.setBounds(bitSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    drywetSlider.setBounds(downSampleSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    
-    // dev
-    //preLowPass.setBounds(0, 400, knobsDim, knobsDim);
+    downSampleSlider.setBounds(distSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
+    bitSlider.setBounds(downSampleSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
+    drywetSlider.setBounds(bitSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     
     inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     outputSlider.setBounds(drywetSlider.getX()+knobsDim+knobsMargin, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
@@ -211,9 +206,8 @@ void ANTARCTICAAudioProcessorEditor::resized()
     // switchers
     gainButton.setBounds(gainSlider.getX()+knobsDim-dimSwitcher/2, gainSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     distButton.setBounds(distSlider.getX()+knobsDim-dimSwitcher/2, distSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    crushButton.setBounds(bitSlider.getX()+knobsDim-dimSwitcher/2, bitSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     downSampleButton.setBounds(downSampleSlider.getX()+knobsDim-dimSwitcher/2, downSampleSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
+    crushButton.setBounds(bitSlider.getX()+knobsDim-dimSwitcher/2, bitSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     
-    //audioProcessor.waveViewer.setBounds(sliderWidth/2, 200, 400, 200);
     sinPlot.setBounds(inputSlider.getX()+inputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth(), 300);
 }

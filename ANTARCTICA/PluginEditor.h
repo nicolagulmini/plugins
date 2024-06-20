@@ -49,7 +49,7 @@ public:
 
 private:
     void setCustomSliderStyle(Slider& s, int type, String name);
-    void setCustomButtonStyle(Button& s, String name);
+    void setCustomButtonStyle(Button& s, String name, String id);
     
     pearlSlider gainSlider;
     pearlSlider distSlider;
