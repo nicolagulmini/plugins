@@ -77,6 +77,8 @@ public:
     
     void parameterChanged(const juce::String& parameterID, float newValue) override;
     
+    void updateSinPlot();
+    
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> gainSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> distSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> bitSliderValue;

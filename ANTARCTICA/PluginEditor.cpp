@@ -83,15 +83,25 @@ void ANTARCTICAAudioProcessorEditor::parameterChanged(const juce::String& parame
     else if (parameterID == BIT_BTN_ID)
     {
         bitSlider.setEnabled(crushButton.getToggleState());
-        sinPlot.setIsBitCrushing(crushButton.getToggleState());
+        //sinPlot.setIsBitCrushing(crushButton.getToggleState());
+        sinPlot.setIsBitCrushing(newValue);
     }
     else if (parameterID == DWNSMP_BTN_ID)
     {
         downSampleSlider.setEnabled(downSampleButton.getToggleState());
-        sinPlot.setIsDownSampling(downSampleButton.getToggleState());
+        //sinPlot.setIsDownSampling(downSampleButton.getToggleState());
+        sinPlot.setIsDownSampling(newValue);
     }
 }
 
+void ANTARCTICAAudioProcessorEditor::updateSinPlot()
+{
+    sinPlot.setDownSampleValue(audioProcessor.treeState.getRawParameterValue(DWNSMP_ID)->load());
+    sinPlot.setBit(int(audioProcessor.treeState.getRawParameterValue(BIT_ID)->load()));
+    sinPlot.setPercentageDryWet(audioProcessor.treeState.getRawParameterValue(DRYWET_ID)->load()/100);
+    sinPlot.setIsBitCrushing(crushButton.getToggleState());
+    sinPlot.setIsDownSampling(downSampleButton.getToggleState());
+}
 
 void ANTARCTICAAudioProcessorEditor::setCustomButtonStyle(Button& b, String name, String id)
 {
@@ -177,6 +187,8 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     g.setColour(Colours::black);
     g.setOpacity(1);
     g.drawRoundedRectangle(inputSlider.getX()+inputSlider.getWidth()/2-1, 200-1, getWidth()-outputSlider.getWidth()+1, 300+1, 10, 3);
+    
+    updateSinPlot();
 }
 
 void ANTARCTICAAudioProcessorEditor::resized()
@@ -210,4 +222,6 @@ void ANTARCTICAAudioProcessorEditor::resized()
     crushButton.setBounds(bitSlider.getX()+knobsDim-dimSwitcher/2, bitSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     
     sinPlot.setBounds(inputSlider.getX()+inputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth(), 300);
+    
+    updateSinPlot();
 }
