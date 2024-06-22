@@ -14,7 +14,7 @@ class ANTARCTICAAudioProcessor  : public juce::AudioProcessor
 {
     
 private:
-    float EPSILON {0.0005f}; // should make it const
+    float EPSILON {0.001f}; // should make it const
     float local_gain {0.0f};
     float local_drive {1.0f};
     float local_bit {0.0f};
@@ -22,6 +22,7 @@ private:
     float local_drywet {100.0f};
     float local_input {0.0f};
     float local_output {0.0f};
+    float local_lowPass {7500.0f};
     
 public:
     //==============================================================================
@@ -67,7 +68,6 @@ public:
 private:
     void updateLowPassFilter(float freq);
     void updateParam(float& localParam, String ID_PARAM, String ID_BTN);
-    float filterAfterProcessFreq {7500.0f};
 
     float lastSampleRate;
     dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> afterProcessingLowPassFilter;

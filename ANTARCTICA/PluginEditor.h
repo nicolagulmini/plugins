@@ -21,6 +21,8 @@
 #define INPUT_NAME "Input"
 #define OUTPUT_ID "output"
 #define OUTPUT_NAME "Output"
+#define LOWPASS_ID "lowpass"
+#define LOWPASS_NAME "LowPass"
 
 #define GAIN_BTN_ID "gain_btn"
 #define GAIN_BTN_NAME "Gain Button"
@@ -56,9 +58,13 @@ private:
     pearlSlider bitSlider;
     pearlSlider downSampleSlider;
     pearlSlider drywetSlider;
-    // dev
-    pearlSlider preLowPass;
     
+    pearlSlider lowPassSlider;
+    
+    pearlSlider placeHolder1;
+    pearlSlider placeHolder2;
+    pearlSlider placeHolder3;
+
     pearlSlider inputSlider;
     pearlSlider outputSlider;
     
@@ -86,6 +92,7 @@ public:
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> drywetSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> outputSliderValue;
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> lowPassSliderValue;
     
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> gainButtonValue;
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> distButtonValue;

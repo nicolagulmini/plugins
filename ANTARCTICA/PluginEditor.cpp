@@ -32,6 +32,17 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     outputSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, OUTPUT_ID, outputSlider);
     setCustomSliderStyle(outputSlider, 1, OUTPUT_NAME);
     
+    // under sinPlot
+    lowPassSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, LOWPASS_ID, lowPassSlider);
+    setCustomSliderStyle(lowPassSlider, 0, LOWPASS_NAME);
+    
+    setCustomSliderStyle(placeHolder1, 0, "Locked");
+    setCustomSliderStyle(placeHolder2, 0, "Locked");
+    setCustomSliderStyle(placeHolder3, 0, "Locked");
+    placeHolder1.setEnabled(false);
+    placeHolder2.setEnabled(false);
+    placeHolder3.setEnabled(false);
+    
     // buttons
     auto configureButton = [this](String ID, String NAME, RedSwitcher& button, Slider& relSlider) {
         auto attachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.treeState, ID, button);
@@ -50,7 +61,7 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     sinPlot.setName("sin plot");
     addAndMakeVisible(sinPlot);
     
-    setSize (1000, 550); // put 1000, 600 for full-image size
+    setSize (1000, 700);
 }
 
 ANTARCTICAAudioProcessorEditor::~ANTARCTICAAudioProcessorEditor()
@@ -58,6 +69,7 @@ ANTARCTICAAudioProcessorEditor::~ANTARCTICAAudioProcessorEditor()
     audioProcessor.treeState.removeParameterListener(BIT_ID, this);
     audioProcessor.treeState.removeParameterListener(DWNSMP_ID, this);
     audioProcessor.treeState.removeParameterListener(DRYWET_ID, this);
+    
     audioProcessor.treeState.removeParameterListener(GAIN_BTN_ID, this);
     audioProcessor.treeState.removeParameterListener(DRIVE_BTN_ID, this);
     audioProcessor.treeState.removeParameterListener(BIT_BTN_ID, this);
@@ -149,8 +161,10 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     drawTextSlider(bitSlider);
     drawTextSlider(downSampleSlider);
     drawTextSlider(drywetSlider);
-    // dev
-    //drawTextSlider(preLowPass);
+    drawTextSlider(lowPassSlider);
+    drawTextSlider(placeHolder1);
+    drawTextSlider(placeHolder2);
+    drawTextSlider(placeHolder3);
     
     // buttons
     g.drawText(inputSlider.getName(),
@@ -203,6 +217,8 @@ void ANTARCTICAAudioProcessorEditor::resized()
     int knobsDim = 120;
     int knobsMargin = 30;
     
+    int sinPlotMargin = 500;
+    
     // x, y, w, h
     
     // knobs
@@ -211,6 +227,10 @@ void ANTARCTICAAudioProcessorEditor::resized()
     downSampleSlider.setBounds(distSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     bitSlider.setBounds(downSampleSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     drywetSlider.setBounds(bitSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
+    lowPassSlider.setBounds(sliderWidth+knobsMargin, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    placeHolder1.setBounds(lowPassSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    placeHolder2.setBounds(placeHolder1.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    placeHolder3.setBounds(placeHolder2.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     
     inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     outputSlider.setBounds(drywetSlider.getX()+knobsDim+knobsMargin, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);

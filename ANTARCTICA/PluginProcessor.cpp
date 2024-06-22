@@ -11,7 +11,7 @@ ANTARCTICAAudioProcessor::ANTARCTICAAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ), treeState(*this, nullptr, "PARAMETERS TREESTATE", createParameterLayout()), afterProcessingLowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, filterAfterProcessFreq))//, waveViewer(1)
+                       ), treeState(*this, nullptr, "PARAMETERS TREESTATE", createParameterLayout()), afterProcessingLowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, local_lowPass))//, waveViewer(1)
 #endif
 {
 }
@@ -40,11 +40,14 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     auto drywetParams = std::make_unique<AudioParameterFloat>(ParameterID{DRYWET_ID,1}, DRYWET_NAME, 0.0f, 100.0f, local_drywet);
     params.push_back(std::move(drywetParams));
     
-    auto inputParams = std::make_unique<AudioParameterFloat>(ParameterID{INPUT_ID,1}, INPUT_NAME, -6.0f, 6.0f, local_input);
+    auto inputParams = std::make_unique<AudioParameterFloat>(ParameterID{INPUT_ID,1}, INPUT_NAME, -50.0f, 12.0f, local_input);
     params.push_back(std::move(inputParams));
     
-    auto outputParams = std::make_unique<AudioParameterFloat>(ParameterID{OUTPUT_ID,1}, OUTPUT_NAME, -6.0f, 6.0f, local_output);
+    auto outputParams = std::make_unique<AudioParameterFloat>(ParameterID{OUTPUT_ID,1}, OUTPUT_NAME, -50.0f, 12.0f, local_output);
     params.push_back(std::move(outputParams));
+    
+    auto lowPassParams = std::make_unique<AudioParameterFloat>(ParameterID{LOWPASS_ID,1}, LOWPASS_NAME, 50.0f, 20000.0f, local_lowPass);
+    params.push_back(std::move(lowPassParams));
     
     // buttons
     auto gainButtonParams = std::make_unique<AudioParameterBool>(ParameterID{GAIN_BTN_ID,1}, GAIN_BTN_NAME, true);
@@ -215,6 +218,7 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             
             toProcessVal = backupVal = finalVal = toProcessValBeforeProcessing = channelData[sample];
             
+        
             updateParam(local_gain, GAIN_ID, GAIN_BTN_ID);
             if (treeState.getRawParameterValue(GAIN_BTN_ID)->load())
                 toProcessVal *= Decibels::decibelsToGain(local_gain);
@@ -246,6 +250,7 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
                 float compressedSample = 1.5*toProcessValBeforeProcessing + (toProcessVal - 1.5*toProcessValBeforeProcessing) / 3.5;
                 toProcessVal = (toProcessVal < 0.0f) ? -compressedSample : compressedSample;
             }
+            
             // lil saturation (not parametrized)
             float saturationAmount = 2.0f;
             finalVal = toProcessVal * (1.0f + saturationAmount) / (1.0f + saturationAmount * abs(toProcessVal));
@@ -258,7 +263,8 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     }
              
     dsp::AudioBlock<float> block (buffer);
-    updateLowPassFilter(filterAfterProcessFreq);
+    updateParam(local_lowPass, LOWPASS_ID, "");
+    updateLowPassFilter(local_lowPass);
     afterProcessingLowPassFilter.process(dsp::ProcessContextReplacing<float>(block));
 }
 
