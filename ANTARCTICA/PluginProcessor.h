@@ -16,13 +16,13 @@ class ANTARCTICAAudioProcessor  : public juce::AudioProcessor
 private:
     float EPSILON {0.001f}; // should make it const
     float local_gain {0.0f};
-    float local_drive {1.0f};
+    float local_drive {2.0f};
     float local_bit {0.0f};
     float local_dwnsmp {0.0f};
     float local_drywet {100.0f};
     float local_input {0.0f};
     float local_output {0.0f};
-    float local_lowPass {7500.0f};
+    float local_lowPass {1000.0f};
     
 public:
     //==============================================================================
@@ -66,8 +66,8 @@ public:
     AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     
 private:
-    void updateLowPassFilter(float freq);
-    void updateParam(float& localParam, String ID_PARAM, String ID_BTN);
+    void updateLowPassFilter();
+    void updateParam(float& localParam, String ID_PARAM, String ID_BTN="");
 
     float lastSampleRate;
     dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> afterProcessingLowPassFilter;

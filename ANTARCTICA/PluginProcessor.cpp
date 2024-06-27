@@ -174,9 +174,9 @@ bool ANTARCTICAAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 }
 #endif
 
-void ANTARCTICAAudioProcessor::updateLowPassFilter(float freq)
+void ANTARCTICAAudioProcessor::updateLowPassFilter()
 {
-    *afterProcessingLowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, freq);
+    *afterProcessingLowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, treeState.getRawParameterValue(LOWPASS_ID)->load());
 }
 
 void ANTARCTICAAudioProcessor::updateParam(float& localParam, String ID_PARAM, String ID_BTN)
@@ -213,7 +213,7 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         {
             float toProcessVal, backupVal, finalVal, toProcessValBeforeProcessing;
             
-            updateParam(local_input, INPUT_ID, "");
+            updateParam(local_input, INPUT_ID);
             channelData[sample] *= Decibels::decibelsToGain(local_input);
             
             toProcessVal = backupVal = finalVal = toProcessValBeforeProcessing = channelData[sample];
@@ -255,16 +255,15 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             float saturationAmount = 2.0f;
             finalVal = toProcessVal * (1.0f + saturationAmount) / (1.0f + saturationAmount * abs(toProcessVal));
             
-            updateParam(local_output, OUTPUT_ID, "");
-            updateParam(local_drywet, DRYWET_ID, "");
+            updateParam(local_output, OUTPUT_ID);
+            updateParam(local_drywet, DRYWET_ID);
             channelData[sample] = Decibels::decibelsToGain(local_output)*(finalVal*(local_drywet/100)+backupVal*(1-local_drywet/100));
              
         }
     }
-             
+     
     dsp::AudioBlock<float> block (buffer);
-    updateParam(local_lowPass, LOWPASS_ID, "");
-    updateLowPassFilter(local_lowPass);
+    updateLowPassFilter();
     afterProcessingLowPassFilter.process(dsp::ProcessContextReplacing<float>(block));
 }
 
