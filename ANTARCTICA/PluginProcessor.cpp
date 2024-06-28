@@ -139,6 +139,9 @@ void ANTARCTICAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     
     afterProcessingLowPassFilter.prepare(spec);
     afterProcessingLowPassFilter.reset();
+    
+    delayBuffer.setSize(getTotalNumInputChannels(), (int) sampleRate * 2); // 2 seconds of circular buffer
+    delayBuffer.clear(); // to avoid bad effects
 }
 
 void ANTARCTICAAudioProcessor::releaseResources()
@@ -176,10 +179,10 @@ bool ANTARCTICAAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 
 void ANTARCTICAAudioProcessor::updateLowPassFilter()
 {
-    *afterProcessingLowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, treeState.getRawParameterValue(LOWPASS_ID)->load());
+    *afterProcessingLowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, local_lowPass);
 }
 
-void ANTARCTICAAudioProcessor::updateParam(float& localParam, String ID_PARAM, String ID_BTN)
+void ANTARCTICAAudioProcessor::updateParam(float& localParam, String ID_PARAM, String ID_BTN, float velocity)
 { // let's suppose that ID_PARAM and ID_BTN exist...
     // smooth update
     float treeStateParam = treeState.getRawParameterValue(ID_PARAM)->load();
@@ -187,12 +190,12 @@ void ANTARCTICAAudioProcessor::updateParam(float& localParam, String ID_PARAM, S
     if(ID_BTN.length()>0 && !treeState.getRawParameterValue(ID_BTN)->load())
         treeStateParam = 0; // not default, just to prevent sharpness
     
-    if (abs(localParam-treeStateParam) < EPSILON)
+    if (abs(localParam-treeStateParam) < EPSILON*velocity)
         localParam = treeStateParam;
     else if (localParam > treeStateParam)
-        localParam -= EPSILON;
+        localParam -= EPSILON*velocity;
     else
-        localParam += EPSILON;
+        localParam += EPSILON*velocity;
 }
 
 void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -201,6 +204,15 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
+    
+    auto playhead = getPlayHead();
+    if (playhead != nullptr)
+    {
+        currentPlayHeadState = playhead->getPosition()->getIsPlaying();
+        if ((not previousPlayHeadState) and playhead->getPosition()->getIsPlaying())
+            delayBuffer.clear();
+        previousPlayHeadState = playhead->getPosition()->getIsPlaying();
+    }
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
@@ -263,8 +275,56 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     }
      
     dsp::AudioBlock<float> block (buffer);
+    updateParam(local_lowPass, LOWPASS_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
     updateLowPassFilter();
     afterProcessingLowPassFilter.process(dsp::ProcessContextReplacing<float>(block));
+}
+
+// delay methods
+void ANTARCTICAAudioProcessor::updateBufferPositions (juce::AudioBuffer<float>& buffer)
+{
+    int bufferSize = buffer.getNumSamples();
+    int delayBufferSize = delayBuffer.getNumSamples();
+    
+    delayBufferWritePosition += bufferSize;
+    delayBufferWritePosition %= delayBufferSize;
+}
+
+void ANTARCTICAAudioProcessor::fillBuffer (juce::AudioBuffer<float>& buffer, int channel)
+{
+    int bufferSize = buffer.getNumSamples();
+    int delayBufferSize = delayBuffer.getNumSamples();
+    
+    float* channelData = buffer.getWritePointer (channel);
+    if (delayBufferSize > delayBufferWritePosition + bufferSize)
+        delayBuffer.copyFrom(channel, delayBufferWritePosition, channelData, bufferSize);
+    else
+    {
+        int leftSamples = delayBufferSize - delayBufferWritePosition;
+        int numSamplesAtStart = bufferSize - leftSamples;
+        delayBuffer.copyFrom(channel, delayBufferWritePosition, channelData, leftSamples);
+        delayBuffer.copyFrom(channel, 0, channelData, numSamplesAtStart);
+    }
+}
+
+void ANTARCTICAAudioProcessor::readFromBuffer (juce::AudioBuffer<float>& buffer, int channel)
+{
+    int bufferSize = buffer.getNumSamples();
+    int delayBufferSize = delayBuffer.getNumSamples();
+    
+    int readPosition = static_cast<int> (delayBufferWritePosition - getSampleRate() * delayTime / 1000);
+    if (readPosition < 0)
+        readPosition += delayBufferSize;
+    
+    if (reverseDelay) delayBuffer.reverse(channel, 0, delayBufferSize);
+    if (readPosition + bufferSize < delayBufferSize)
+        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, amountDelay, amountDelay);
+    else
+    {
+        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), delayBufferSize-readPosition, amountDelay, amountDelay);
+        buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, amountDelay, amountDelay);
+    }
+    if (reverseDelay) delayBuffer.reverse(channel, 0, delayBufferSize);
 }
 
 //==============================================================================

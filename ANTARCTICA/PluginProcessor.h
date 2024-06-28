@@ -67,10 +67,28 @@ public:
     
 private:
     void updateLowPassFilter();
-    void updateParam(float& localParam, String ID_PARAM, String ID_BTN="");
-
+    void updateParam(float& localParam, String ID_PARAM, String ID_BTN="", float velocity=1);
+    
     float lastSampleRate;
     dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> afterProcessingLowPassFilter;
+    
+    // delay section
+    
+    void fillBuffer (AudioBuffer<float>& buffer, int channel);
+    void readFromBuffer (AudioBuffer<float>& buffer, int channel);
+    void updateBufferPositions(AudioBuffer<float>& buffer);
+        
+    bool previousPlayHeadState {false};
+    bool currentPlayHeadState {false};
+    
+    AudioBuffer<float> delayBuffer;
+    int delayBufferWritePosition {0};
+    double delayTime {1000.0f}; // in ms
+    double amountDelay {1.0f};
+    double mix {1.0f};
+    bool reverseDelay {false};
+    
     //==============================================================================
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ANTARCTICAAudioProcessor)
 };
