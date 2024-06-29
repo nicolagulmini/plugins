@@ -23,6 +23,8 @@ private:
     float local_input {0.0f};
     float local_output {0.0f};
     float local_lowPass {16000.0f};
+    float local_delayTime {1000.0f}; // in ms
+    float local_delayAmount {0.5f};
     
 public:
     //==============================================================================
@@ -85,9 +87,6 @@ private:
     
     AudioBuffer<float> delayBuffer;
     int delayBufferWritePosition {0};
-    double delayTime {1000.0f}; // in ms
-    double amountDelay {1.0f};
-    double mix {1.0f};
     bool reverseDelay {false};
     
     //==============================================================================

@@ -49,6 +49,12 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     auto lowPassParams = std::make_unique<AudioParameterFloat>(ParameterID{LOWPASS_ID,1}, LOWPASS_NAME, 50.0f, 20000.0f, local_lowPass);
     params.push_back(std::move(lowPassParams));
     
+    auto delayAmountParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYAMOUNT_ID,1}, DELAYAMOUNT_NAME, 0.0f, 0.8f, local_delayAmount);
+    params.push_back(std::move(delayAmountParams));
+    
+    auto delayTimeParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYTIME_ID,1}, DELAYTIME_NAME, 0.1f, 1900.0f, local_delayTime);
+    params.push_back(std::move(delayTimeParams));
+    
     // buttons
     auto gainButtonParams = std::make_unique<AudioParameterBool>(ParameterID{GAIN_BTN_ID,1}, GAIN_BTN_NAME, true);
     params.push_back(std::move(gainButtonParams));
@@ -214,24 +220,30 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         previousPlayHeadState = playhead->getPosition()->getIsPlaying();
     }
     
-    bypassBuffer.makeCopyOf(buffer);
+    bypassBuffer.makeCopyOf(buffer, false);
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
+        // delay
+        fillBuffer(buffer, channel);
+        updateParam(local_delayAmount, DELAYAMOUNT_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
+        updateParam(local_delayTime, DELAYTIME_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
+        readFromBuffer(buffer, channel); // reverse implemented inside this method
+        fillBuffer(buffer, channel);
+        
         auto* channelData = buffer.getWritePointer (channel);
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            float toProcessVal, backupVal, finalVal, toProcessValBeforeProcessing;
+            float toProcessVal, finalVal;
             
             updateParam(local_input, INPUT_ID);
             channelData[sample] *= Decibels::decibelsToGain(local_input);
             
             toProcessVal = finalVal = channelData[sample];
-            
         
             updateParam(local_gain, GAIN_ID, GAIN_BTN_ID);
             if (treeState.getRawParameterValue(GAIN_BTN_ID)->load())
@@ -266,7 +278,7 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     updateParam(local_lowPass, LOWPASS_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
     updateLowPassFilter();
     afterProcessingLowPassFilter.process(dsp::ProcessContextReplacing<float>(block));
-    
+        
     // input channels = output channels
     updateParam(local_drywet, DRYWET_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
     buffer.applyGain(local_drywet/100);
@@ -275,6 +287,8 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     
     updateParam(local_output, OUTPUT_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
     buffer.applyGain(Decibels::decibelsToGain(local_output));
+    
+    updateBufferPositions(buffer);
 }
 
 // delay methods
@@ -309,17 +323,17 @@ void ANTARCTICAAudioProcessor::readFromBuffer (juce::AudioBuffer<float>& buffer,
     int bufferSize = buffer.getNumSamples();
     int delayBufferSize = delayBuffer.getNumSamples();
     
-    int readPosition = static_cast<int> (delayBufferWritePosition - getSampleRate() * delayTime / 1000);
+    int readPosition = static_cast<int> (delayBufferWritePosition - getSampleRate() * local_delayTime / 1000);
     if (readPosition < 0)
         readPosition += delayBufferSize;
     
     if (reverseDelay) delayBuffer.reverse(channel, 0, delayBufferSize);
     if (readPosition + bufferSize < delayBufferSize)
-        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, amountDelay, amountDelay);
+        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, local_delayAmount, local_delayAmount);
     else
     {
-        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), delayBufferSize-readPosition, amountDelay, amountDelay);
-        buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, amountDelay, amountDelay);
+        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), delayBufferSize-readPosition, local_delayAmount, local_delayAmount);
+        buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, local_delayAmount, local_delayAmount);
     }
     if (reverseDelay) delayBuffer.reverse(channel, 0, delayBufferSize);
 }

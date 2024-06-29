@@ -36,11 +36,13 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     lowPassSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, LOWPASS_ID, lowPassSlider);
     setCustomSliderStyle(lowPassSlider, 0, LOWPASS_NAME);
     
-    setCustomSliderStyle(placeHolder1, 0, "Locked");
-    setCustomSliderStyle(placeHolder2, 0, "Locked");
+    delayAmountSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYAMOUNT_ID, delayAmountSlider);
+    setCustomSliderStyle(delayAmountSlider, 0, DELAYAMOUNT_NAME);
+    
+    delayTimeSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYTIME_ID, delayTimeSlider);
+    setCustomSliderStyle(delayTimeSlider, 0, DELAYTIME_NAME);
+
     setCustomSliderStyle(placeHolder3, 0, "Locked");
-    placeHolder1.setEnabled(false);
-    placeHolder2.setEnabled(false);
     placeHolder3.setEnabled(false);
     
     // buttons
@@ -162,8 +164,8 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     drawTextSlider(downSampleSlider);
     drawTextSlider(drywetSlider);
     drawTextSlider(lowPassSlider);
-    drawTextSlider(placeHolder1);
-    drawTextSlider(placeHolder2);
+    drawTextSlider(delayAmountSlider);
+    drawTextSlider(delayTimeSlider);
     drawTextSlider(placeHolder3);
     
     // buttons
@@ -228,9 +230,9 @@ void ANTARCTICAAudioProcessorEditor::resized()
     bitSlider.setBounds(downSampleSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     drywetSlider.setBounds(bitSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     lowPassSlider.setBounds(sliderWidth+knobsMargin, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
-    placeHolder1.setBounds(lowPassSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
-    placeHolder2.setBounds(placeHolder1.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
-    placeHolder3.setBounds(placeHolder2.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    delayAmountSlider.setBounds(lowPassSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    delayTimeSlider.setBounds(delayAmountSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    placeHolder3.setBounds(delayTimeSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     
     inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     outputSlider.setBounds(drywetSlider.getX()+knobsDim+knobsMargin, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);

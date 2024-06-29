@@ -23,6 +23,10 @@
 #define OUTPUT_NAME "Output"
 #define LOWPASS_ID "lowpass"
 #define LOWPASS_NAME "LowPass"
+#define DELAYAMOUNT_ID "delayamount"
+#define DELAYAMOUNT_NAME "Delay Amount"
+#define DELAYTIME_ID "delaytime"
+#define DELAYTIME_NAME "Delay Time [ms]"
 
 #define GAIN_BTN_ID "gain_btn"
 #define GAIN_BTN_NAME "Gain Button"
@@ -61,8 +65,8 @@ private:
     
     pearlSlider lowPassSlider;
     
-    pearlSlider placeHolder1;
-    pearlSlider placeHolder2;
+    pearlSlider delayAmountSlider;
+    pearlSlider delayTimeSlider;
     pearlSlider placeHolder3;
 
     pearlSlider inputSlider;
@@ -93,6 +97,8 @@ public:
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> outputSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> lowPassSliderValue;
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayAmountSliderValue;
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayTimeSliderValue;
     
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> gainButtonValue;
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> distButtonValue;
