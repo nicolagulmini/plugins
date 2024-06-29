@@ -213,6 +213,8 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             delayBuffer.clear();
         previousPlayHeadState = playhead->getPosition()->getIsPlaying();
     }
+    
+    bypassBuffer.makeCopyOf(buffer);
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
@@ -228,20 +230,16 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             updateParam(local_input, INPUT_ID);
             channelData[sample] *= Decibels::decibelsToGain(local_input);
             
-            toProcessVal = backupVal = finalVal = toProcessValBeforeProcessing = channelData[sample];
+            toProcessVal = finalVal = channelData[sample];
             
         
             updateParam(local_gain, GAIN_ID, GAIN_BTN_ID);
             if (treeState.getRawParameterValue(GAIN_BTN_ID)->load())
                 toProcessVal *= Decibels::decibelsToGain(local_gain);
             
-            toProcessValBeforeProcessing = toProcessVal;
-            
             updateParam(local_drive, DRIVE_ID, DRIVE_BTN_ID);
             if (treeState.getRawParameterValue(DRIVE_BTN_ID)->load())
-            {
                 toProcessVal = tanh(local_drive * toProcessVal);
-            }
             
             updateParam(local_dwnsmp, DWNSMP_ID, DWNSMP_BTN_ID);
             if (treeState.getRawParameterValue(DWNSMP_BTN_ID)->load())
@@ -256,21 +254,11 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             if (treeState.getRawParameterValue(BIT_BTN_ID)->load())
                 toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-local_bit)+1)));
             
-            // lil compression (not parametrized)
-            if (abs(toProcessVal) > 1.5*abs(toProcessValBeforeProcessing))
-            {
-                float compressedSample = 1.5*toProcessValBeforeProcessing + (toProcessVal - 1.5*toProcessValBeforeProcessing) / 3.5;
-                toProcessVal = (toProcessVal < 0.0f) ? -compressedSample : compressedSample;
-            }
-            
             // lil saturation (not parametrized)
             float saturationAmount = 2.0f;
             finalVal = toProcessVal * (1.0f + saturationAmount) / (1.0f + saturationAmount * abs(toProcessVal));
             
-            updateParam(local_output, OUTPUT_ID);
-            updateParam(local_drywet, DRYWET_ID);
-            channelData[sample] = Decibels::decibelsToGain(local_output)*(finalVal*(local_drywet/100)+backupVal*(1-local_drywet/100));
-             
+            channelData[sample] = finalVal;
         }
     }
      
@@ -278,6 +266,15 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     updateParam(local_lowPass, LOWPASS_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
     updateLowPassFilter();
     afterProcessingLowPassFilter.process(dsp::ProcessContextReplacing<float>(block));
+    
+    // input channels = output channels
+    updateParam(local_drywet, DRYWET_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
+    buffer.applyGain(local_drywet/100);
+    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+        buffer.addFrom(channel, 0, bypassBuffer, channel, 0, buffer.getNumSamples(), 1-local_drywet/100);
+    
+    updateParam(local_output, OUTPUT_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
+    buffer.applyGain(Decibels::decibelsToGain(local_output));
 }
 
 // delay methods
