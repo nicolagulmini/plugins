@@ -79,8 +79,8 @@ private:
     
     // delay section
     
-    void fillBuffer (AudioBuffer<float>& buffer, int channel);
-    void readFromBuffer (AudioBuffer<float>& buffer, int channelSource, int channelDest);
+    void fillBuffer (AudioBuffer<float>& buffer, int channel, bool alternate=false);
+    void readFromBuffer (AudioBuffer<float>& buffer, int channel);
     void updateBufferPositions(AudioBuffer<float>& buffer);
         
     bool previousPlayHeadState {false};
@@ -90,7 +90,6 @@ private:
     int delayBufferWritePosition {0};
     int channelPingPong {0};
     int channelPingPongCounter {0}; 
-    bool reverseDelay {false};
     
     //==============================================================================
     

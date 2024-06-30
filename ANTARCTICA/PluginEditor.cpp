@@ -42,27 +42,28 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     delayTimeSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYTIME_ID, delayTimeSlider);
     setCustomSliderStyle(delayTimeSlider, 0, DELAYTIME_NAME);
     //delayTimeSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxAbove, false, 80, 20);
-
-    /*
-     // deprecated
-    delayMixSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYMIX_ID, delayMixSlider);
-    setCustomSliderStyle(delayMixSlider, 0, DELAYMIX_NAME);
-    delayMixSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxAbove, false, 80, 20);
-     */
     
     // buttons
-    auto configureButton = [this](String ID, String NAME, RedSwitcher& button, Slider& relSlider) {
+    auto configureButton = [this](String ID, String NAME, RedSwitcher& button) {
         auto attachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.treeState, ID, button);
         setCustomButtonStyle(button, NAME, ID);
         audioProcessor.treeState.addParameterListener(ID, this);
-        relSlider.setEnabled(button.getToggleState());
         return attachment;
     };
     
-    gainButtonValue = configureButton(GAIN_BTN_ID, GAIN_BTN_NAME, gainButton, gainSlider);
-    distButtonValue = configureButton(DRIVE_BTN_ID, DRIVE_BTN_NAME, distButton, distSlider);
-    crushButtonValue = configureButton(BIT_BTN_ID, BIT_BTN_NAME, crushButton, bitSlider);
-    downSampleButtonValue = configureButton(DWNSMP_BTN_ID, DWNSMP_BTN_NAME, downSampleButton, downSampleSlider);
+    gainButtonValue = configureButton(GAIN_BTN_ID, GAIN_BTN_NAME, gainButton);
+    gainSlider.setEnabled(gainButton.getToggleState());
+    distButtonValue = configureButton(DRIVE_BTN_ID, DRIVE_BTN_NAME, distButton);
+    distSlider.setEnabled(distButton.getToggleState());
+    crushButtonValue = configureButton(BIT_BTN_ID, BIT_BTN_NAME, crushButton);
+    bitSlider.setEnabled(crushButton.getToggleState());
+    downSampleButtonValue = configureButton(DWNSMP_BTN_ID, DWNSMP_BTN_NAME, downSampleButton);
+    downSampleSlider.setEnabled(downSampleButton.getToggleState());
+    
+    bypassButtonValue = configureButton(BYPASS_BTN_ID, BYPASS_BTN_NAME, bypassButton);
+    randomButtonValue = configureButton(RANDOM_BTN_ID, RANDOM_BTN_NAME, randomButton);
+    flutterButtonValue = configureButton(FLUTTER_BTN_ID, FLUTTER_BTN_NAME, flutterButton);
+    reverseButtonValue = configureButton(REV_BTN_ID, REV_BTN_NAME, reverseButton);
     
     // sin plot
     sinPlot.setName("sin plot");
@@ -171,7 +172,6 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     drawTextSlider(lowPassSlider);
     drawTextSlider(delayAmountSlider);
     drawTextSlider(delayTimeSlider);
-    drawTextSlider(delayMixSlider);
     
     // buttons
     g.drawText(inputSlider.getName(),
@@ -237,7 +237,6 @@ void ANTARCTICAAudioProcessorEditor::resized()
     lowPassSlider.setBounds(sliderWidth+knobsMargin, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     delayAmountSlider.setBounds(lowPassSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     delayTimeSlider.setBounds(delayAmountSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
-    delayMixSlider.setBounds(delayTimeSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     
     inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     outputSlider.setBounds(drywetSlider.getX()+knobsDim+knobsMargin, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
