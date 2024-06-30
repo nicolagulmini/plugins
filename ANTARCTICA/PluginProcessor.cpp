@@ -49,10 +49,10 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     auto lowPassParams = std::make_unique<AudioParameterFloat>(ParameterID{LOWPASS_ID,1}, LOWPASS_NAME, 50.0f, 20000.0f, local_lowPass);
     params.push_back(std::move(lowPassParams));
     
-    auto delayAmountParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYAMOUNT_ID,1}, DELAYAMOUNT_NAME, 0.0f, 0.8f, local_delayAmount);
+    auto delayAmountParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYAMOUNT_ID,1}, DELAYAMOUNT_NAME, 0.0f, 1.0f, local_delayAmount);
     params.push_back(std::move(delayAmountParams));
     
-    auto delayTimeParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYTIME_ID,1}, DELAYTIME_NAME, 1.0f, 3999.0f, local_delayTime);
+    auto delayTimeParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYTIME_ID,1}, DELAYTIME_NAME, 1.0f, 800.0f, local_delayTime);
     params.push_back(std::move(delayTimeParams));
     
     // buttons
@@ -146,7 +146,7 @@ void ANTARCTICAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     afterProcessingLowPassFilter.prepare(spec);
     afterProcessingLowPassFilter.reset();
     
-    delayBuffer.setSize(getTotalNumInputChannels(), (int) sampleRate * 4); // 4 seconds of circular buffer
+    delayBuffer.setSize(getTotalNumInputChannels(), (int) sampleRate * 2); // 4 seconds of circular buffer
     delayBuffer.clear(); // to avoid bad effects
 }
 
@@ -225,19 +225,26 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
+    // delay
+    fillBuffer(buffer, channelPingPong);
+    updateParam(local_delayAmount, DELAYAMOUNT_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
+    updateParam(local_delayTime, DELAYTIME_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
+    readFromBuffer(buffer, (channelPingPong+1)%2); // reverse implemented inside this method
+    fillBuffer(buffer, (channelPingPong+1)%2);
+    
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        // delay
-        fillBuffer(buffer, channel);
-        updateParam(local_delayAmount, DELAYAMOUNT_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
-        updateParam(local_delayTime, DELAYTIME_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
-        readFromBuffer(buffer, channel); // reverse implemented inside this method
-        fillBuffer(buffer, channel);
-        
         auto* channelData = buffer.getWritePointer (channel);
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
+            if (channel == 0)
+            {
+                channelPingPongCounter += 1;
+                channelPingPongCounter %= int(2*(getSampleRate() * local_delayTime / 1000));
+            }
+            channelPingPong = bool(channelPingPongCounter > (getSampleRate() * local_delayTime / 1000));
+            
             float toProcessVal, finalVal;
             
             updateParam(local_input, INPUT_ID);

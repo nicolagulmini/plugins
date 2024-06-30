@@ -22,8 +22,8 @@ private:
     float local_drywet {100.0f};
     float local_input {0.0f};
     float local_output {0.0f};
-    float local_lowPass {16000.0f};
-    float local_delayTime {1000.0f}; // in ms
+    float local_lowPass {10000.0f};
+    float local_delayTime {100.0}; // in ms
     float local_delayAmount {0.5f};
     
 public:
@@ -87,7 +87,9 @@ private:
     
     AudioBuffer<float> delayBuffer;
     int delayBufferWritePosition {0};
-    bool reverseDelay {true};
+    int channelPingPong {0};
+    int channelPingPongCounter {0}; 
+    bool reverseDelay {false};
     
     //==============================================================================
     

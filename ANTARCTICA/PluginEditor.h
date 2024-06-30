@@ -24,9 +24,9 @@
 #define LOWPASS_ID "lowpass"
 #define LOWPASS_NAME "LowPass"
 #define DELAYAMOUNT_ID "delayamount"
-#define DELAYAMOUNT_NAME "Delay Amount"
+#define DELAYAMOUNT_NAME "Tail Amount"
 #define DELAYTIME_ID "delaytime"
-#define DELAYTIME_NAME "Delay Time [ms]"
+#define DELAYTIME_NAME "Tail Time [ms]"
 
 #define GAIN_BTN_ID "gain_btn"
 #define GAIN_BTN_NAME "Gain Button"
