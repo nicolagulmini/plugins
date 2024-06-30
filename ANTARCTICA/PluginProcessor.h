@@ -25,7 +25,7 @@ private:
     float local_lowPass {10000.0f};
     float local_delayTime {100.0}; // in ms
     float local_delayAmount {0.5f};
-    float local_delayMix {0.5f};
+    float local_delayMix {1.0f};
     
 public:
     //==============================================================================

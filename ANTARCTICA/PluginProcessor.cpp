@@ -40,22 +40,22 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     auto drywetParams = std::make_unique<AudioParameterFloat>(ParameterID{DRYWET_ID,1}, DRYWET_NAME, 0.0f, 100.0f, local_drywet);
     params.push_back(std::move(drywetParams));
     
-    auto inputParams = std::make_unique<AudioParameterFloat>(ParameterID{INPUT_ID,1}, INPUT_NAME, -50.0f, 12.0f, local_input);
+    auto inputParams = std::make_unique<AudioParameterFloat>(ParameterID{INPUT_ID,1}, INPUT_NAME, -100.0f, 12.0f, local_input);
     params.push_back(std::move(inputParams));
     
-    auto outputParams = std::make_unique<AudioParameterFloat>(ParameterID{OUTPUT_ID,1}, OUTPUT_NAME, -50.0f, 12.0f, local_output);
+    auto outputParams = std::make_unique<AudioParameterFloat>(ParameterID{OUTPUT_ID,1}, OUTPUT_NAME, -100.0f, 12.0f, local_output);
     params.push_back(std::move(outputParams));
     
     auto lowPassParams = std::make_unique<AudioParameterFloat>(ParameterID{LOWPASS_ID,1}, LOWPASS_NAME, 50.0f, 20000.0f, local_lowPass);
     params.push_back(std::move(lowPassParams));
     
-    auto delayAmountParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYAMOUNT_ID,1}, DELAYAMOUNT_NAME, 0.0f, 1.0f, local_delayAmount);
+    auto delayAmountParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYAMOUNT_ID,1}, DELAYAMOUNT_NAME, 0.0f, 0.99f, local_delayAmount);
     params.push_back(std::move(delayAmountParams));
     
     auto delayTimeParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYTIME_ID,1}, DELAYTIME_NAME, 1.0f, 800.0f, local_delayTime);
     params.push_back(std::move(delayTimeParams));
     
-    auto delayMixParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYMIX_ID,1}, DELAYMIX_NAME, 0.0f, 0.9F, local_delayMix);
+    auto delayMixParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYMIX_ID,1}, DELAYMIX_NAME, 0.8f, 1.0f, local_delayMix);
     params.push_back(std::move(delayMixParams));
     
     // buttons
@@ -233,7 +233,6 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     fillBuffer(buffer, 1);
     updateParam(local_delayAmount, DELAYAMOUNT_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
     updateParam(local_delayTime, DELAYTIME_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
-    updateParam(local_delayMix, DELAYMIX_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
     readFromBuffer(buffer, channelPingPong); // reverse implemented inside this method
     fillBuffer(buffer, 0);
     fillBuffer(buffer, 1);
@@ -247,7 +246,7 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
             channelPingPongCounter += 1;
             channelPingPongCounter %= int(2*(getSampleRate() * local_delayTime / 1000));
-            channelPingPong = bool(channelPingPongCounter > (getSampleRate() * local_delayTime / 1000));
+            channelPingPong = int(channelPingPongCounter > (getSampleRate() * local_delayTime / 1000));
             
             float toProcessVal, finalVal;
             

@@ -43,8 +43,12 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     setCustomSliderStyle(delayTimeSlider, 0, DELAYTIME_NAME);
     //delayTimeSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxAbove, false, 80, 20);
 
+    /*
+     // deprecated
     delayMixSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYMIX_ID, delayMixSlider);
     setCustomSliderStyle(delayMixSlider, 0, DELAYMIX_NAME);
+    delayMixSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxAbove, false, 80, 20);
+     */
     
     // buttons
     auto configureButton = [this](String ID, String NAME, RedSwitcher& button, Slider& relSlider) {
