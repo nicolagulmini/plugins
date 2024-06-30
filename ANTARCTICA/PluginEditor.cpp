@@ -41,6 +41,7 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     
     delayTimeSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYTIME_ID, delayTimeSlider);
     setCustomSliderStyle(delayTimeSlider, 0, DELAYTIME_NAME);
+    delayTimeSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxAbove, false, 80, 20);
 
     setCustomSliderStyle(placeHolder3, 0, "Locked");
     placeHolder3.setEnabled(false);

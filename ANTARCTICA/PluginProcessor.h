@@ -87,7 +87,7 @@ private:
     
     AudioBuffer<float> delayBuffer;
     int delayBufferWritePosition {0};
-    bool reverseDelay {false};
+    bool reverseDelay {true};
     
     //==============================================================================
     

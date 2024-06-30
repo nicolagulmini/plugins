@@ -52,7 +52,7 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     auto delayAmountParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYAMOUNT_ID,1}, DELAYAMOUNT_NAME, 0.0f, 0.8f, local_delayAmount);
     params.push_back(std::move(delayAmountParams));
     
-    auto delayTimeParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYTIME_ID,1}, DELAYTIME_NAME, 0.1f, 1900.0f, local_delayTime);
+    auto delayTimeParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYTIME_ID,1}, DELAYTIME_NAME, 1.0f, 3999.0f, local_delayTime);
     params.push_back(std::move(delayTimeParams));
     
     // buttons
@@ -146,7 +146,7 @@ void ANTARCTICAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     afterProcessingLowPassFilter.prepare(spec);
     afterProcessingLowPassFilter.reset();
     
-    delayBuffer.setSize(getTotalNumInputChannels(), (int) sampleRate * 2); // 2 seconds of circular buffer
+    delayBuffer.setSize(getTotalNumInputChannels(), (int) sampleRate * 4); // 4 seconds of circular buffer
     delayBuffer.clear(); // to avoid bad effects
 }
 
@@ -308,13 +308,13 @@ void ANTARCTICAAudioProcessor::fillBuffer (juce::AudioBuffer<float>& buffer, int
     
     float* channelData = buffer.getWritePointer (channel);
     if (delayBufferSize > delayBufferWritePosition + bufferSize)
-        delayBuffer.copyFrom(channel, delayBufferWritePosition, channelData, bufferSize);
+        delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, bufferSize, 0.5f, 0.5f);
     else
     {
         int leftSamples = delayBufferSize - delayBufferWritePosition;
         int numSamplesAtStart = bufferSize - leftSamples;
-        delayBuffer.copyFrom(channel, delayBufferWritePosition, channelData, leftSamples);
-        delayBuffer.copyFrom(channel, 0, channelData, numSamplesAtStart);
+        delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, leftSamples, 0.5f, 0.5f);
+        delayBuffer.copyFromWithRamp(channel, 0, channelData, numSamplesAtStart, 0.5f, 0.5f);
     }
 }
 
