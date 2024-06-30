@@ -319,7 +319,7 @@ void ANTARCTICAAudioProcessor::fillBuffer (juce::AudioBuffer<float>& buffer, int
     
     float* channelData = buffer.getWritePointer (channel);
     if (delayBufferSize > delayBufferWritePosition + bufferSize)
-        delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, bufferSize, 0.5f, 0.5f);
+        delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, bufferSize, local_delayMix, local_delayMix);
     else
     {
         int leftSamples = delayBufferSize - delayBufferWritePosition;
