@@ -80,7 +80,7 @@ private:
     // delay section
     
     void fillBuffer (AudioBuffer<float>& buffer, int channel);
-    void readFromBuffer (AudioBuffer<float>& buffer, int channel);
+    void readFromBuffer (AudioBuffer<float>& buffer, int channelSource, int channelDest);
     void updateBufferPositions(AudioBuffer<float>& buffer);
         
     bool previousPlayHeadState {false};

@@ -49,7 +49,7 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     auto lowPassParams = std::make_unique<AudioParameterFloat>(ParameterID{LOWPASS_ID,1}, LOWPASS_NAME, 50.0f, 20000.0f, local_lowPass);
     params.push_back(std::move(lowPassParams));
     
-    auto delayAmountParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYAMOUNT_ID,1}, DELAYAMOUNT_NAME, 0.0f, 0.99f, local_delayAmount);
+    auto delayAmountParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYAMOUNT_ID,1}, DELAYAMOUNT_NAME, 0.0f, 0.9f, local_delayAmount);
     params.push_back(std::move(delayAmountParams));
     
     auto delayTimeParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYTIME_ID,1}, DELAYTIME_NAME, 1.0f, 800.0f, local_delayTime);
@@ -228,22 +228,20 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
-    // delay
-    fillBuffer(buffer, 0);
-    fillBuffer(buffer, 1);
     updateParam(local_delayAmount, DELAYAMOUNT_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
     updateParam(local_delayTime, DELAYTIME_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
-    readFromBuffer(buffer, channelPingPong); // reverse implemented inside this method
-    fillBuffer(buffer, 0);
-    fillBuffer(buffer, 1);
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
+        // delay
+        fillBuffer(buffer, channel);
+        readFromBuffer(buffer, channel, int(channel != channelPingPong)); // reverse implemented inside this method
+        fillBuffer(buffer, channel);
+        
         auto* channelData = buffer.getWritePointer (channel);
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-
             channelPingPongCounter += 1;
             channelPingPongCounter %= int(2*(getSampleRate() * local_delayTime / 1000));
             channelPingPong = int(channelPingPongCounter > (getSampleRate() * local_delayTime / 1000));
@@ -328,7 +326,7 @@ void ANTARCTICAAudioProcessor::fillBuffer (juce::AudioBuffer<float>& buffer, int
     }
 }
 
-void ANTARCTICAAudioProcessor::readFromBuffer (juce::AudioBuffer<float>& buffer, int channel)
+void ANTARCTICAAudioProcessor::readFromBuffer (juce::AudioBuffer<float>& buffer, int channelSource, int channelDest)
 {
     int bufferSize = buffer.getNumSamples();
     int delayBufferSize = delayBuffer.getNumSamples();
@@ -337,15 +335,15 @@ void ANTARCTICAAudioProcessor::readFromBuffer (juce::AudioBuffer<float>& buffer,
     if (readPosition < 0)
         readPosition += delayBufferSize;
     
-    if (reverseDelay) delayBuffer.reverse(channel, 0, delayBufferSize);
+    if (reverseDelay) delayBuffer.reverse(channelSource, 0, delayBufferSize);
     if (readPosition + bufferSize < delayBufferSize)
-        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), bufferSize, local_delayAmount, local_delayAmount);
+        buffer.addFromWithRamp(channelDest, 0, delayBuffer.getReadPointer(channelSource, readPosition), bufferSize, local_delayAmount, local_delayAmount);
     else
     {
-        buffer.addFromWithRamp(channel, 0, delayBuffer.getReadPointer(channel, readPosition), delayBufferSize-readPosition, local_delayAmount, local_delayAmount);
-        buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, local_delayAmount, local_delayAmount);
+        buffer.addFromWithRamp(channelDest, 0, delayBuffer.getReadPointer(channelSource, readPosition), delayBufferSize-readPosition, local_delayAmount, local_delayAmount);
+        buffer.addFromWithRamp(channelDest, delayBufferSize-readPosition, delayBuffer.getReadPointer(channelSource, 0), bufferSize-delayBufferSize+readPosition, local_delayAmount, local_delayAmount);
     }
-    if (reverseDelay) delayBuffer.reverse(channel, 0, delayBufferSize);
+    if (reverseDelay) delayBuffer.reverse(channelSource, 0, delayBufferSize);
 }
 
 //==============================================================================
