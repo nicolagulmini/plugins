@@ -26,7 +26,9 @@
 #define DELAYAMOUNT_ID "delayamount"
 #define DELAYAMOUNT_NAME "Tail Amount"
 #define DELAYTIME_ID "delaytime"
-#define DELAYTIME_NAME "Tail Time [ms]"
+#define DELAYTIME_NAME "Tail Length"
+#define DELAYMIX_ID "delaymix"
+#define DELAYMIX_NAME "Tail Mix"
 
 #define GAIN_BTN_ID "gain_btn"
 #define GAIN_BTN_NAME "Gain Button"
@@ -67,7 +69,7 @@ private:
     
     pearlSlider delayAmountSlider;
     pearlSlider delayTimeSlider;
-    pearlSlider placeHolder3;
+    pearlSlider delayMixSlider;
 
     pearlSlider inputSlider;
     pearlSlider outputSlider;
@@ -99,6 +101,7 @@ public:
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> lowPassSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayAmountSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayTimeSliderValue;
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayMixSliderValue;
     
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> gainButtonValue;
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> distButtonValue;

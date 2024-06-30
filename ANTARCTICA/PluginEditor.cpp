@@ -41,10 +41,10 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     
     delayTimeSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYTIME_ID, delayTimeSlider);
     setCustomSliderStyle(delayTimeSlider, 0, DELAYTIME_NAME);
-    delayTimeSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxAbove, false, 80, 20);
+    //delayTimeSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxAbove, false, 80, 20);
 
-    setCustomSliderStyle(placeHolder3, 0, "Locked");
-    placeHolder3.setEnabled(false);
+    delayMixSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYMIX_ID, delayMixSlider);
+    setCustomSliderStyle(delayMixSlider, 0, DELAYMIX_NAME);
     
     // buttons
     auto configureButton = [this](String ID, String NAME, RedSwitcher& button, Slider& relSlider) {
@@ -167,7 +167,7 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     drawTextSlider(lowPassSlider);
     drawTextSlider(delayAmountSlider);
     drawTextSlider(delayTimeSlider);
-    drawTextSlider(placeHolder3);
+    drawTextSlider(delayMixSlider);
     
     // buttons
     g.drawText(inputSlider.getName(),
@@ -233,7 +233,7 @@ void ANTARCTICAAudioProcessorEditor::resized()
     lowPassSlider.setBounds(sliderWidth+knobsMargin, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     delayAmountSlider.setBounds(lowPassSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     delayTimeSlider.setBounds(delayAmountSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
-    placeHolder3.setBounds(delayTimeSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    delayMixSlider.setBounds(delayTimeSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     
     inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     outputSlider.setBounds(drywetSlider.getX()+knobsDim+knobsMargin, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);

@@ -55,6 +55,9 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     auto delayTimeParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYTIME_ID,1}, DELAYTIME_NAME, 1.0f, 800.0f, local_delayTime);
     params.push_back(std::move(delayTimeParams));
     
+    auto delayMixParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYMIX_ID,1}, DELAYMIX_NAME, 0.0f, 0.9F, local_delayMix);
+    params.push_back(std::move(delayMixParams));
+    
     // buttons
     auto gainButtonParams = std::make_unique<AudioParameterBool>(ParameterID{GAIN_BTN_ID,1}, GAIN_BTN_NAME, true);
     params.push_back(std::move(gainButtonParams));
@@ -226,11 +229,14 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         buffer.clear (i, 0, buffer.getNumSamples());
     
     // delay
-    fillBuffer(buffer, channelPingPong);
+    fillBuffer(buffer, 0);
+    fillBuffer(buffer, 1);
     updateParam(local_delayAmount, DELAYAMOUNT_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
     updateParam(local_delayTime, DELAYTIME_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
-    readFromBuffer(buffer, (channelPingPong+1)%2); // reverse implemented inside this method
-    fillBuffer(buffer, (channelPingPong+1)%2);
+    updateParam(local_delayMix, DELAYMIX_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
+    readFromBuffer(buffer, channelPingPong); // reverse implemented inside this method
+    fillBuffer(buffer, 0);
+    fillBuffer(buffer, 1);
     
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
@@ -238,11 +244,9 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            if (channel == 0)
-            {
-                channelPingPongCounter += 1;
-                channelPingPongCounter %= int(2*(getSampleRate() * local_delayTime / 1000));
-            }
+
+            channelPingPongCounter += 1;
+            channelPingPongCounter %= int(2*(getSampleRate() * local_delayTime / 1000));
             channelPingPong = bool(channelPingPongCounter > (getSampleRate() * local_delayTime / 1000));
             
             float toProcessVal, finalVal;
@@ -320,8 +324,8 @@ void ANTARCTICAAudioProcessor::fillBuffer (juce::AudioBuffer<float>& buffer, int
     {
         int leftSamples = delayBufferSize - delayBufferWritePosition;
         int numSamplesAtStart = bufferSize - leftSamples;
-        delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, leftSamples, 0.5f, 0.5f);
-        delayBuffer.copyFromWithRamp(channel, 0, channelData, numSamplesAtStart, 0.5f, 0.5f);
+        delayBuffer.copyFromWithRamp(channel, delayBufferWritePosition, channelData, leftSamples, local_delayMix, local_delayMix);
+        delayBuffer.copyFromWithRamp(channel, 0, channelData, numSamplesAtStart, local_delayMix, local_delayMix);
     }
 }
 
