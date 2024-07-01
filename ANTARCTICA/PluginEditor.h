@@ -45,6 +45,8 @@
 #define FLUTTER_BTN_NAME    "Flutter Button"
 #define REV_BTN_ID          "reverse_btn"
 #define REV_BTN_NAME        "Reverse Button"
+#define TAIL_BTN_ID         "tail_btn"
+#define TAIL_BTN_NAME       "Tail Button"
 
 using juce::Slider;
 using juce::ToggleButton;
@@ -88,6 +90,7 @@ private:
     RedSwitcher randomButton;
     RedSwitcher flutterButton;
     RedSwitcher reverseButton;
+    RedSwitcher tailButton;
     
     SinPlot sinPlot;
     
@@ -120,6 +123,7 @@ public:
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> randomButtonValue;
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> flutterButtonValue;
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> reverseButtonValue;
+    std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> tailButtonValue;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ANTARCTICAAudioProcessorEditor)
 };

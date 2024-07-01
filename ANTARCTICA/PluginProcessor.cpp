@@ -40,10 +40,10 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     auto drywetParams = std::make_unique<AudioParameterFloat>(ParameterID{DRYWET_ID,1}, DRYWET_NAME, 0.0f, 100.0f, local_drywet);
     params.push_back(std::move(drywetParams));
     
-    auto inputParams = std::make_unique<AudioParameterFloat>(ParameterID{INPUT_ID,1}, INPUT_NAME, -100.0f, 12.0f, local_input);
+    auto inputParams = std::make_unique<AudioParameterFloat>(ParameterID{INPUT_ID,1}, INPUT_NAME, 0.0f, 2.0f, local_input);
     params.push_back(std::move(inputParams));
     
-    auto outputParams = std::make_unique<AudioParameterFloat>(ParameterID{OUTPUT_ID,1}, OUTPUT_NAME, -100.0f, 12.0f, local_output);
+    auto outputParams = std::make_unique<AudioParameterFloat>(ParameterID{OUTPUT_ID,1}, OUTPUT_NAME, 0.0f, 2.0f, local_output);
     params.push_back(std::move(outputParams));
     
     auto lowPassParams = std::make_unique<AudioParameterFloat>(ParameterID{LOWPASS_ID,1}, LOWPASS_NAME, 50.0f, 20000.0f, local_lowPass);
@@ -80,6 +80,9 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     
     auto reverseButtonParams = std::make_unique<AudioParameterBool>(ParameterID{REV_BTN_ID,1}, REV_BTN_NAME, false);
     params.push_back(std::move(reverseButtonParams));
+    
+    auto tailButtonParams = std::make_unique<AudioParameterBool>(ParameterID{TAIL_BTN_ID,1}, TAIL_BTN_NAME, false);
+    params.push_back(std::move(tailButtonParams));
 
     // return vector
     return {params.begin(), params.end()};
@@ -248,15 +251,16 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         
         channelPingPongCounter += buffer.getNumSamples();
         channelPingPongCounter %= int(2*(getSampleRate() * local_delayTime / 1000));
-        // verifica e ottimizza ***
-        if (treeState.getRawParameterValue(FLUTTER_BTN_ID)->load())
-        {
-            if (channel == int(channelPingPongCounter > (getSampleRate() * local_delayTime / 1000)))
-                readFromBuffer(buffer, channel); // reverse implemented inside this method
-        }
-        else
-            readFromBuffer(buffer, channel);
-        // questo ***
+        
+        if (!
+            (
+             treeState.getRawParameterValue(FLUTTER_BTN_ID)->load()
+                &&
+             !(channel == int(channelPingPongCounter > (getSampleRate() * local_delayTime / 1000)))
+             )
+            )
+            readFromBuffer(buffer, channel); // reverse implemented inside this method
+        
         fillBuffer(buffer, channel);
         
         auto* channelData = buffer.getWritePointer (channel);
@@ -266,7 +270,7 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             float toProcessVal, finalVal;
             
             updateParam(local_input, INPUT_ID);
-            channelData[sample] *= Decibels::decibelsToGain(local_input);
+            channelData[sample] *= local_input;
             
             toProcessVal = finalVal = channelData[sample];
         
@@ -311,7 +315,7 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         buffer.addFrom(channel, 0, bypassBuffer, channel, 0, buffer.getNumSamples(), 1-local_drywet/100);
     
     updateParam(local_output, OUTPUT_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
-    buffer.applyGain(Decibels::decibelsToGain(local_output));
+    buffer.applyGain(local_output);
     
     updateBufferPositions(buffer);
 }
@@ -330,8 +334,6 @@ void ANTARCTICAAudioProcessor::fillBuffer (juce::AudioBuffer<float>& buffer, int
 {
     int bufferSize = buffer.getNumSamples();
     int delayBufferSize = delayBuffer.getNumSamples();
-    
-    int conv = int(alternate);
     
     float* channelData = buffer.getWritePointer ((channel+int(alternate))%2);
     if (delayBufferSize > delayBufferWritePosition + bufferSize)

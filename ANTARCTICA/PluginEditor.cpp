@@ -53,12 +53,19 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     
     gainButtonValue = configureButton(GAIN_BTN_ID, GAIN_BTN_NAME, gainButton);
     gainSlider.setEnabled(gainButton.getToggleState());
+    
     distButtonValue = configureButton(DRIVE_BTN_ID, DRIVE_BTN_NAME, distButton);
     distSlider.setEnabled(distButton.getToggleState());
+    
     crushButtonValue = configureButton(BIT_BTN_ID, BIT_BTN_NAME, crushButton);
     bitSlider.setEnabled(crushButton.getToggleState());
+    
     downSampleButtonValue = configureButton(DWNSMP_BTN_ID, DWNSMP_BTN_NAME, downSampleButton);
     downSampleSlider.setEnabled(downSampleButton.getToggleState());
+    
+    tailButtonValue = configureButton(TAIL_BTN_ID, TAIL_BTN_NAME, tailButton);
+    delayAmountSlider.setEnabled(tailButton.getToggleState());
+    delayTimeSlider.setEnabled(tailButton.getToggleState());
     
     bypassButtonValue = configureButton(BYPASS_BTN_ID, BYPASS_BTN_NAME, bypassButton);
     randomButtonValue = configureButton(RANDOM_BTN_ID, RANDOM_BTN_NAME, randomButton);
@@ -111,6 +118,11 @@ void ANTARCTICAAudioProcessorEditor::parameterChanged(const juce::String& parame
         downSampleSlider.setEnabled(downSampleButton.getToggleState());
         //sinPlot.setIsDownSampling(downSampleButton.getToggleState());
         sinPlot.setIsDownSampling(newValue);
+    }
+    else if (parameterID == TAIL_BTN_ID)
+    {
+        delayAmountSlider.setEnabled(tailButton.getToggleState());
+        delayTimeSlider.setEnabled(tailButton.getToggleState());
     }
 }
 
