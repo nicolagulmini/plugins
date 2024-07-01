@@ -42,9 +42,9 @@
 #define RANDOM_BTN_ID       "random_btn"
 #define RANDOM_BTN_NAME     "Random Button"
 #define FLUTTER_BTN_ID      "flutter_btn"
-#define FLUTTER_BTN_NAME    "Flutter Button"
+#define FLUTTER_BTN_NAME    "Split Channels"
 #define REV_BTN_ID          "reverse_btn"
-#define REV_BTN_NAME        "Reverse Button"
+#define REV_BTN_NAME        "Reverse Buffer"
 #define TAIL_BTN_ID         "tail_btn"
 #define TAIL_BTN_NAME       "Tail Button"
 

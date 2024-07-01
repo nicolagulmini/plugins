@@ -185,7 +185,7 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     drawTextSlider(delayAmountSlider);
     drawTextSlider(delayTimeSlider);
     
-    // buttons
+    // vertical sliders
     g.drawText(inputSlider.getName(),
                inputSlider.getX() + inputSlider.getWidth()/2 - wText/2,
                inputSlider.getY() + inputSlider.getHeight() - hText/2 + 10,
@@ -200,7 +200,20 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
                hText,
                Justification::centred);
     
+    // buttons
+    auto drawTextButton = [wText, hText, &g](Button& b) {
+        g.drawText(b.getName(),
+                   b.getX() + b.getWidth(),
+                   b.getY() + b.getHeight()/2 - hText/2,
+                   wText,
+                   hText,
+                   Justification::centred);
+    };
     
+    //drawTextButton(bypassButton);
+    drawTextButton(flutterButton);
+    drawTextButton(reverseButton);
+        
     g.setColour(Colours::white);
     g.setOpacity(0.2);
     g.fillRoundedRectangle(inputSlider.getX()+inputSlider.getWidth()/2-1, 200-1, getWidth()-outputSlider.getWidth()+1, 300+1, 10);
@@ -250,14 +263,21 @@ void ANTARCTICAAudioProcessorEditor::resized()
     delayAmountSlider.setBounds(lowPassSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     delayTimeSlider.setBounds(delayAmountSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     
+    // vertical sliders
     inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     outputSlider.setBounds(drywetSlider.getX()+knobsDim+knobsMargin, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     
-    // switchers
+    // buttons
     gainButton.setBounds(gainSlider.getX()+knobsDim-dimSwitcher/2, gainSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     distButton.setBounds(distSlider.getX()+knobsDim-dimSwitcher/2, distSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     downSampleButton.setBounds(downSampleSlider.getX()+knobsDim-dimSwitcher/2, downSampleSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     crushButton.setBounds(bitSlider.getX()+knobsDim-dimSwitcher/2, bitSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
+    tailButton.setBounds(delayAmountSlider.getX()+knobsDim-dimSwitcher/2, delayAmountSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
+    
+    flutterButton.setBounds(delayTimeSlider.getX()+knobsDim-dimSwitcher/2, delayTimeSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
+    reverseButton.setBounds(delayTimeSlider.getX()+knobsDim-dimSwitcher/2, delayTimeSlider.getY()-dimSwitcher/2, dimSwitcher, dimSwitcher);
+    
+    bypassButton.setBounds(900, 600, dimSwitcher, dimSwitcher);
     
     sinPlot.setBounds(inputSlider.getX()+inputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth(), 300);
     
