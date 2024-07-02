@@ -71,6 +71,8 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     randomButtonValue = configureButton(RANDOM_BTN_ID, RANDOM_BTN_NAME, randomButton);
     flutterButtonValue = configureButton(FLUTTER_BTN_ID, FLUTTER_BTN_NAME, flutterButton);
     reverseButtonValue = configureButton(REV_BTN_ID, REV_BTN_NAME, reverseButton);
+    reverseButton.setState(Button::ButtonState(1));
+    flutterButton.setState(Button::ButtonState(1));
     
     // sin plot
     sinPlot.setName("sin plot");
@@ -123,6 +125,8 @@ void ANTARCTICAAudioProcessorEditor::parameterChanged(const juce::String& parame
     {
         delayAmountSlider.setEnabled(tailButton.getToggleState());
         delayTimeSlider.setEnabled(tailButton.getToggleState());
+        //reverseButton.setClickingTogglesState(tailButton.getToggleState());
+        //flutterButton.setClickingTogglesState(tailButton.getToggleState());
     }
 }
 
