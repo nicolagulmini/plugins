@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+
 using juce::Decibels;
 using juce::AudioVisualiserComponent;
 
@@ -14,17 +15,29 @@ class ANTARCTICAAudioProcessor  : public juce::AudioProcessor
 {
     
 private:
-    float EPSILON {0.001f}; // should make it const
-    float local_gain {0.0f};
-    float local_drive {0.0f};
-    float local_bit {0.0f};
-    float local_dwnsmp {0.0f};
-    float local_drywet {100.0f};
-    float local_input {1.0f};
-    float local_output {1.0f};
-    float local_lowPass {10000.0f};
-    float local_delayTime {100.0}; // in ms
-    float local_delayAmount {0.5f};
+    float EPSILON                   {0.001f};   // should make it const
+    
+    float local_gain                {0.0f};
+    float local_drive               {0.0f};
+    float local_bit                 {0.0f};
+    float local_dwnsmp              {0.0f};
+    float local_drywet              {100.0f};
+    float local_input               {1.0f};
+    float local_output              {1.0f};
+    //float local_lowPass           {10000.0f};
+    float local_delayTime           {100.0f};    // in ms
+    float local_delayAmount         {0.5f};
+    
+    float local_rnd_interval        {500.0f};   // in ms
+    float local_rnd_duration        {500.0f};   // in ms
+    
+    // backup values for random (dont like this strategy, imma change it soon)
+    // they are ranged from 0 to 1
+    float bkpDrive                  {0.0f};
+    float bkpBit                    {0.0f};
+    float bkpDwnsp                  {0.0f};
+    float bkpDelayTime              {100.0f};    // in ms
+    float bkpDelayAmount            {0.5f};
     
 public:
     //==============================================================================
@@ -68,11 +81,15 @@ public:
     AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     
 private:
-    void updateLowPassFilter();
+    
     void updateParam(float& localParam, String ID_PARAM, String ID_BTN="", float velocity=1);
     
+    // low pass filter
+    /*
+    void updateLowPassFilter();
     float lastSampleRate;
     dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> afterProcessingLowPassFilter;
+    */
     
     AudioBuffer<float> bypassBuffer;
     
@@ -81,6 +98,9 @@ private:
     void fillBuffer (AudioBuffer<float>& buffer, int channel, bool alternate=false);
     void readFromBuffer (AudioBuffer<float>& buffer, int channel);
     void updateBufferPositions(AudioBuffer<float>& buffer);
+    
+    void assignRandomValues();
+    void undoRandomAssignment();
         
     bool previousPlayHeadState {false};
     bool currentPlayHeadState {false};
@@ -89,6 +109,10 @@ private:
     int delayBufferWritePosition {0};
     int channelPingPong {0};
     int channelPingPongCounter {0};
+    
+    Random rndGenerator;
+    int rndIntervalCounter {0};
+    bool rndIsInterval {false};
     
     //==============================================================================
     

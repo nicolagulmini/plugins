@@ -12,6 +12,7 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
 
     distSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DRIVE_ID, distSlider);
     setCustomSliderStyle(distSlider, 0, DRIVE_NAME);
+    distSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxAbove, false, 80, 20);
     
     bitSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, BIT_ID, bitSlider);
     setCustomSliderStyle(bitSlider, 0, BIT_NAME);
@@ -33,15 +34,23 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     setCustomSliderStyle(outputSlider, 1, OUTPUT_NAME);
     
     // under sinPlot
+    
+    /*
     lowPassSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, LOWPASS_ID, lowPassSlider);
     setCustomSliderStyle(lowPassSlider, 0, LOWPASS_NAME);
+    */
     
     delayAmountSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYAMOUNT_ID, delayAmountSlider);
     setCustomSliderStyle(delayAmountSlider, 0, DELAYAMOUNT_NAME);
     
     delayTimeSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYTIME_ID, delayTimeSlider);
     setCustomSliderStyle(delayTimeSlider, 0, DELAYTIME_NAME);
-    //delayTimeSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxAbove, false, 80, 20);
+    
+    rndIntervalSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, RND_INTERVAL_ID, rndIntervalSlider);
+    setCustomSliderStyle(rndIntervalSlider, 0, RND_INTERVAL_NAME);
+    
+    rndDurationSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, RND_DURATION_ID, rndDurationSlider);
+    setCustomSliderStyle(rndDurationSlider, 0, RND_DURATION_NAME);
     
     // buttons
     auto configureButton = [this](String ID, String NAME, RedSwitcher& button) {
@@ -68,11 +77,15 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     delayTimeSlider.setEnabled(tailButton.getToggleState());
     
     bypassButtonValue = configureButton(BYPASS_BTN_ID, BYPASS_BTN_NAME, bypassButton);
+    
     randomButtonValue = configureButton(RANDOM_BTN_ID, RANDOM_BTN_NAME, randomButton);
+    rndIntervalSlider.setEnabled(randomButton.getToggleState());
+    rndDurationSlider.setEnabled(randomButton.getToggleState());
+    
     flutterButtonValue = configureButton(FLUTTER_BTN_ID, FLUTTER_BTN_NAME, flutterButton);
     reverseButtonValue = configureButton(REV_BTN_ID, REV_BTN_NAME, reverseButton);
-    reverseButton.setState(Button::ButtonState(1));
-    flutterButton.setState(Button::ButtonState(1));
+    //reverseButton.setState(Button::ButtonState(1));
+    //flutterButton.setState(Button::ButtonState(1));
     
     // sin plot
     sinPlot.setName("sin plot");
@@ -127,6 +140,11 @@ void ANTARCTICAAudioProcessorEditor::parameterChanged(const juce::String& parame
         delayTimeSlider.setEnabled(tailButton.getToggleState());
         //reverseButton.setClickingTogglesState(tailButton.getToggleState());
         //flutterButton.setClickingTogglesState(tailButton.getToggleState());
+    }
+    else if (parameterID == RANDOM_BTN_ID)
+    {
+        rndIntervalSlider.setEnabled(randomButton.getToggleState());
+        rndDurationSlider.setEnabled(randomButton.getToggleState());
     }
 }
 
@@ -185,9 +203,12 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     drawTextSlider(bitSlider);
     drawTextSlider(downSampleSlider);
     drawTextSlider(drywetSlider);
-    drawTextSlider(lowPassSlider);
+    //drawTextSlider(lowPassSlider);
     drawTextSlider(delayAmountSlider);
     drawTextSlider(delayTimeSlider);
+    drawTextSlider(rndDurationSlider);
+    drawTextSlider(rndIntervalSlider);
+
     
     // vertical sliders
     g.drawText(inputSlider.getName(),
@@ -263,9 +284,11 @@ void ANTARCTICAAudioProcessorEditor::resized()
     downSampleSlider.setBounds(distSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     bitSlider.setBounds(downSampleSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     drywetSlider.setBounds(bitSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    lowPassSlider.setBounds(sliderWidth+knobsMargin, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
-    delayAmountSlider.setBounds(lowPassSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    //lowPassSlider.setBounds(sliderWidth+knobsMargin, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    delayAmountSlider.setBounds(sliderWidth+knobsMargin, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     delayTimeSlider.setBounds(delayAmountSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    rndIntervalSlider.setBounds(delayTimeSlider.getX()+knobsDim+knobsMargin*2+50, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    rndDurationSlider.setBounds(rndIntervalSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     
     // vertical sliders
     inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
@@ -277,6 +300,7 @@ void ANTARCTICAAudioProcessorEditor::resized()
     downSampleButton.setBounds(downSampleSlider.getX()+knobsDim-dimSwitcher/2, downSampleSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     crushButton.setBounds(bitSlider.getX()+knobsDim-dimSwitcher/2, bitSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     tailButton.setBounds(delayAmountSlider.getX()+knobsDim-dimSwitcher/2, delayAmountSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
+    randomButton.setBounds(rndIntervalSlider.getX()+knobsDim-dimSwitcher/2, rndIntervalSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     
     flutterButton.setBounds(delayTimeSlider.getX()+knobsDim-dimSwitcher/2, delayTimeSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
     reverseButton.setBounds(delayTimeSlider.getX()+knobsDim-dimSwitcher/2, delayTimeSlider.getY()-dimSwitcher/2, dimSwitcher, dimSwitcher);

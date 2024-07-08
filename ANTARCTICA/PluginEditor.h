@@ -21,12 +21,17 @@
 #define INPUT_NAME          "Input"
 #define OUTPUT_ID           "output"
 #define OUTPUT_NAME         "Output"
-#define LOWPASS_ID          "lowpass"
-#define LOWPASS_NAME        "LowPass"
+//#define LOWPASS_ID          "lowpass"
+//#define LOWPASS_NAME        "LowPass"
 #define DELAYAMOUNT_ID      "delayamount"
 #define DELAYAMOUNT_NAME    "Tail Amount"
 #define DELAYTIME_ID        "delaytime"
 #define DELAYTIME_NAME      "Tail Length"
+
+#define RND_INTERVAL_ID      "rnd_interval"
+#define RND_INTERVAL_NAME    "Random Interval"
+#define RND_DURATION_ID      "rnd_duration"
+#define RND_DURATION_NAME    "Random Duration"
 
 #define GAIN_BTN_ID         "gain_btn"
 #define GAIN_BTN_NAME       "Gain Button"
@@ -74,10 +79,13 @@ private:
     pearlSlider downSampleSlider;
     pearlSlider drywetSlider;
     
-    pearlSlider lowPassSlider;
+    //pearlSlider lowPassSlider;
     
     pearlSlider delayAmountSlider;
     pearlSlider delayTimeSlider;
+    
+    pearlSlider rndIntervalSlider;
+    pearlSlider rndDurationSlider;
 
     pearlSlider inputSlider;
     pearlSlider outputSlider;
@@ -111,9 +119,11 @@ public:
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> drywetSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> inputSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> outputSliderValue;
-    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> lowPassSliderValue;
+    //std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> lowPassSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayAmountSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> delayTimeSliderValue;
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> rndIntervalSliderValue;
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> rndDurationSliderValue;
     
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> gainButtonValue;
     std::unique_ptr<AudioProcessorValueTreeState::ButtonAttachment> distButtonValue;

@@ -11,7 +11,8 @@ ANTARCTICAAudioProcessor::ANTARCTICAAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ), treeState(*this, nullptr, "PARAMETERS TREESTATE", createParameterLayout()), afterProcessingLowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, local_lowPass))//, waveViewer(1)
+                       ), treeState(*this, nullptr, "PARAMETERS TREESTATE", createParameterLayout())
+                        //, afterProcessingLowPassFilter(dsp::IIR::Coefficients<float>::makeLowPass(44100, local_lowPass))//, waveViewer(1)
 #endif
 {
 }
@@ -46,8 +47,16 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     auto outputParams = std::make_unique<AudioParameterFloat>(ParameterID{OUTPUT_ID,1}, OUTPUT_NAME, 0.0f, 2.0f, local_output);
     params.push_back(std::move(outputParams));
     
+    auto rndDuration = std::make_unique<AudioParameterFloat>(ParameterID{RND_DURATION_ID,1}, RND_DURATION_NAME, 1.0f, 1000.0f, local_rnd_duration);
+    params.push_back(std::move(rndDuration));
+    
+    auto rndInterval = std::make_unique<AudioParameterFloat>(ParameterID{RND_INTERVAL_ID,1}, RND_INTERVAL_NAME, 1.0f, 1000.0f, local_rnd_interval);
+    params.push_back(std::move(rndInterval));
+    
+    /*
     auto lowPassParams = std::make_unique<AudioParameterFloat>(ParameterID{LOWPASS_ID,1}, LOWPASS_NAME, 50.0f, 20000.0f, local_lowPass);
     params.push_back(std::move(lowPassParams));
+    */
     
     auto delayAmountParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYAMOUNT_ID,1}, DELAYAMOUNT_NAME, 0.0f, 0.9f, local_delayAmount);
     params.push_back(std::move(delayAmountParams));
@@ -153,6 +162,7 @@ void ANTARCTICAAudioProcessor::changeProgramName (int index, const juce::String&
 //==============================================================================
 void ANTARCTICAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    /*
     lastSampleRate = sampleRate;
     dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
@@ -161,6 +171,7 @@ void ANTARCTICAAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     
     afterProcessingLowPassFilter.prepare(spec);
     afterProcessingLowPassFilter.reset();
+     */
     
     delayBuffer.setSize(getTotalNumInputChannels(), (int) sampleRate * 2); // 4 seconds of circular buffer
     delayBuffer.clear(); // to avoid bad effects
@@ -199,10 +210,12 @@ bool ANTARCTICAAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 }
 #endif
 
+/*
 void ANTARCTICAAudioProcessor::updateLowPassFilter()
 {
     *afterProcessingLowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(lastSampleRate, local_lowPass);
 }
+ */
 
 void ANTARCTICAAudioProcessor::updateParam(float& localParam, String ID_PARAM, String ID_BTN, float velocity)
 { // let's suppose that ID_PARAM and ID_BTN exist...
@@ -223,7 +236,6 @@ void ANTARCTICAAudioProcessor::updateParam(float& localParam, String ID_PARAM, S
 void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     ScopedNoDenormals noDenormals;
-
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     
@@ -245,6 +257,25 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     {
         updateParam(local_delayAmount, DELAYAMOUNT_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
         updateParam(local_delayTime, DELAYTIME_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
+        updateParam(local_rnd_duration, RND_DURATION_ID, RANDOM_BTN_ID, totalNumInputChannels*buffer.getNumSamples()*500);
+        updateParam(local_rnd_interval, RND_INTERVAL_ID, RANDOM_BTN_ID, totalNumInputChannels*buffer.getNumSamples()*500);
+        
+        if(treeState.getRawParameterValue(RANDOM_BTN_ID)->load())
+        {
+            rndIntervalCounter += 2*buffer.getNumSamples();
+            if (rndIsInterval && rndIntervalCounter > int(getSampleRate() * local_rnd_interval / 1000))
+            {
+                assignRandomValues();
+                rndIntervalCounter = 0;
+                rndIsInterval = false;
+            }
+            if ((!rndIsInterval) && rndIntervalCounter > int(getSampleRate() * local_rnd_duration / 1000))
+            {
+                undoRandomAssignment();
+                rndIntervalCounter = 0;
+                rndIsInterval = true;
+            }
+        }
         
         for (int channel = 0; channel < totalNumInputChannels; ++channel)
         {
@@ -283,6 +314,7 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
                 if (treeState.getRawParameterValue(GAIN_BTN_ID)->load())
                     toProcessVal *= Decibels::decibelsToGain(local_gain);
                 
+                //if (!treeState.getRawParameterValue(RANDOM_BTN_ID)->load())
                 updateParam(local_drive, DRIVE_ID, DRIVE_BTN_ID);
                 if (treeState.getRawParameterValue(DRIVE_BTN_ID)->load())
                     toProcessVal = tanh(local_drive * toProcessVal);
@@ -308,11 +340,13 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             }
         }
          
+        /*
         dsp::AudioBlock<float> block (buffer);
         updateParam(local_lowPass, LOWPASS_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
         updateLowPassFilter();
         afterProcessingLowPassFilter.process(dsp::ProcessContextReplacing<float>(block));
-            
+        */
+        
         // input channels = output channels
         updateParam(local_drywet, DRYWET_ID, "", totalNumInputChannels*buffer.getNumSamples()*500);
         buffer.applyGain(local_drywet/100);
@@ -371,6 +405,71 @@ void ANTARCTICAAudioProcessor::readFromBuffer (juce::AudioBuffer<float>& buffer,
         buffer.addFromWithRamp(channel, delayBufferSize-readPosition, delayBuffer.getReadPointer(channel, 0), bufferSize-delayBufferSize+readPosition, local_delayAmount, local_delayAmount);
     }
     if (treeState.getRawParameterValue(REV_BTN_ID)->load()) delayBuffer.reverse(channel, 0, delayBufferSize);
+}
+
+// random methods
+void ANTARCTICAAudioProcessor::assignRandomValues()
+{
+    float newValue;
+    
+    if (treeState.getRawParameterValue(DRIVE_BTN_ID)->load())
+    {
+        auto* param = treeState.getParameter(DRIVE_ID);
+        bkpDrive = local_drive;
+        newValue = rndGenerator.nextFloat()*param->convertTo0to1(local_drive);
+        treeState.getParameter(DRIVE_ID)->setValueNotifyingHost(newValue);
+        local_drive = param->convertFrom0to1(newValue);
+    }
+    /*
+    if (treeState.getRawParameterValue(BIT_BTN_ID)->load())
+    {
+        bkpBit = local_bit;
+        newValue = juce::Random::getSystemRandom().nextFloat()*bkpBit;
+        treeState.getParameter(BIT_ID)->setValueNotifyingHost(newValue);
+        local_bit = newValue;
+    }
+    if (treeState.getRawParameterValue(DWNSMP_BTN_ID)->load())
+    {
+        bkpDwnsp = local_dwnsmp;
+        newValue = juce::Random::getSystemRandom().nextFloat()*bkpDwnsp;
+        treeState.getParameter(DWNSMP_ID)->setValueNotifyingHost(newValue);
+        local_dwnsmp = newValue;
+    }
+    if (treeState.getRawParameterValue(TAIL_BTN_ID)->load())
+    {
+        bkpDelayTime = local_delayTime;
+        newValue = juce::Random::getSystemRandom().nextFloat()*bkpDelayTime;
+        treeState.getParameter(DELAYTIME_ID)->setValueNotifyingHost(newValue);
+        local_delayTime = newValue;
+        
+        bkpDelayAmount = local_delayAmount;
+        newValue = juce::Random::getSystemRandom().nextFloat()*bkpDelayAmount;
+        treeState.getParameter(DELAYAMOUNT_ID)->setValueNotifyingHost(newValue);
+        local_delayAmount = newValue;
+    }
+    */
+}
+
+void ANTARCTICAAudioProcessor::undoRandomAssignment()
+{
+    auto* param = treeState.getParameter(DRIVE_ID);
+    local_drive = bkpDrive;
+    //treeState.getParameter(DRIVE_ID)->beginChangeGesture();
+    treeState.getParameter(DRIVE_ID)->setValueNotifyingHost(param->convertTo0to1(local_drive));
+    //treeState.getParameter(DRIVE_ID)->endChangeGesture();
+        
+    /*
+    local_bit = bkpBit;
+    treeState.getParameter(BIT_ID)->setValueNotifyingHost(bkpBit);
+    
+    local_dwnsmp = bkpDwnsp;
+    treeState.getParameter(DWNSMP_ID)->setValueNotifyingHost(bkpDwnsp);
+        
+    local_delayTime = bkpDelayTime;
+    local_delayAmount = bkpDelayAmount;
+    treeState.getParameter(DELAYTIME_ID)->setValueNotifyingHost(bkpDelayTime);
+    treeState.getParameter(DELAYAMOUNT_ID)->setValueNotifyingHost(bkpDelayAmount);
+     */
 }
 
 //==============================================================================
