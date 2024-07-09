@@ -412,6 +412,8 @@ void ANTARCTICAAudioProcessor::assignRandomValues()
 {
     float newValue;
     
+    // do a lambda function instead of this
+    
     if (treeState.getRawParameterValue(DRIVE_BTN_ID)->load())
     {
         auto* param = treeState.getParameter(DRIVE_ID);
@@ -420,34 +422,36 @@ void ANTARCTICAAudioProcessor::assignRandomValues()
         treeState.getParameter(DRIVE_ID)->setValueNotifyingHost(newValue);
         local_drive = param->convertFrom0to1(newValue);
     }
-    /*
     if (treeState.getRawParameterValue(BIT_BTN_ID)->load())
     {
+        auto* param = treeState.getParameter(BIT_ID);
         bkpBit = local_bit;
-        newValue = juce::Random::getSystemRandom().nextFloat()*bkpBit;
+        newValue = rndGenerator.nextFloat()*param->convertTo0to1(local_bit);
         treeState.getParameter(BIT_ID)->setValueNotifyingHost(newValue);
-        local_bit = newValue;
+        local_bit = param->convertFrom0to1(newValue);
     }
     if (treeState.getRawParameterValue(DWNSMP_BTN_ID)->load())
     {
+        auto* param = treeState.getParameter(DWNSMP_ID);
         bkpDwnsp = local_dwnsmp;
-        newValue = juce::Random::getSystemRandom().nextFloat()*bkpDwnsp;
+        newValue = rndGenerator.nextFloat()*param->convertTo0to1(local_dwnsmp);
         treeState.getParameter(DWNSMP_ID)->setValueNotifyingHost(newValue);
-        local_dwnsmp = newValue;
+        local_dwnsmp = param->convertFrom0to1(newValue);
     }
     if (treeState.getRawParameterValue(TAIL_BTN_ID)->load())
     {
+        auto* param = treeState.getParameter(DELAYTIME_ID);
         bkpDelayTime = local_delayTime;
-        newValue = juce::Random::getSystemRandom().nextFloat()*bkpDelayTime;
+        newValue = rndGenerator.nextFloat()*param->convertTo0to1(local_delayTime);
         treeState.getParameter(DELAYTIME_ID)->setValueNotifyingHost(newValue);
-        local_delayTime = newValue;
+        local_delayTime = param->convertFrom0to1(newValue);
         
+        param = treeState.getParameter(DELAYAMOUNT_ID);
         bkpDelayAmount = local_delayAmount;
-        newValue = juce::Random::getSystemRandom().nextFloat()*bkpDelayAmount;
+        newValue = rndGenerator.nextFloat()*param->convertTo0to1(local_delayAmount);
         treeState.getParameter(DELAYAMOUNT_ID)->setValueNotifyingHost(newValue);
-        local_delayAmount = newValue;
+        local_delayAmount = param->convertFrom0to1(newValue);
     }
-    */
 }
 
 void ANTARCTICAAudioProcessor::undoRandomAssignment()
@@ -457,19 +461,22 @@ void ANTARCTICAAudioProcessor::undoRandomAssignment()
     //treeState.getParameter(DRIVE_ID)->beginChangeGesture();
     treeState.getParameter(DRIVE_ID)->setValueNotifyingHost(param->convertTo0to1(local_drive));
     //treeState.getParameter(DRIVE_ID)->endChangeGesture();
-        
-    /*
+      
+    param = treeState.getParameter(BIT_ID);
     local_bit = bkpBit;
-    treeState.getParameter(BIT_ID)->setValueNotifyingHost(bkpBit);
+    treeState.getParameter(BIT_ID)->setValueNotifyingHost(param->convertTo0to1(local_bit));
     
+    param = treeState.getParameter(DWNSMP_ID);
     local_dwnsmp = bkpDwnsp;
-    treeState.getParameter(DWNSMP_ID)->setValueNotifyingHost(bkpDwnsp);
-        
+    treeState.getParameter(DWNSMP_ID)->setValueNotifyingHost(param->convertTo0to1(local_dwnsmp));
+    
+    param = treeState.getParameter(DELAYTIME_ID);
     local_delayTime = bkpDelayTime;
+    treeState.getParameter(DELAYTIME_ID)->setValueNotifyingHost(param->convertTo0to1(local_delayTime));
+    
+    param = treeState.getParameter(DELAYAMOUNT_ID);
     local_delayAmount = bkpDelayAmount;
-    treeState.getParameter(DELAYTIME_ID)->setValueNotifyingHost(bkpDelayTime);
-    treeState.getParameter(DELAYAMOUNT_ID)->setValueNotifyingHost(bkpDelayAmount);
-     */
+    treeState.getParameter(DELAYAMOUNT_ID)->setValueNotifyingHost(param->convertTo0to1(local_delayAmount));
 }
 
 //==============================================================================

@@ -31,8 +31,7 @@ private:
     float local_rnd_interval        {500.0f};   // in ms
     float local_rnd_duration        {500.0f};   // in ms
     
-    // backup values for random (dont like this strategy, imma change it soon)
-    // they are ranged from 0 to 1
+    // backup values for random
     float bkpDrive                  {0.0f};
     float bkpBit                    {0.0f};
     float bkpDwnsp                  {0.0f};
@@ -112,7 +111,7 @@ private:
     
     Random rndGenerator;
     int rndIntervalCounter {0};
-    bool rndIsInterval {false};
+    bool rndIsInterval {true};
     
     //==============================================================================
     
