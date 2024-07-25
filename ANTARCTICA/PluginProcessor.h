@@ -24,7 +24,6 @@ private:
     float local_drywet              {100.0f};
     float local_input               {1.0f};
     float local_output              {1.0f};
-    //float local_lowPass           {10000.0f};
     float local_delayTime           {100.0f};    // in ms
     float local_delayAmount         {0.5f};
     
@@ -82,13 +81,7 @@ public:
 private:
     
     void updateParam(float& localParam, String ID_PARAM, String ID_BTN="", float velocity=1);
-    
-    // low pass filter
-    /*
-    void updateLowPassFilter();
-    float lastSampleRate;
-    dsp::ProcessorDuplicator<dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float>> afterProcessingLowPassFilter;
-    */
+    void updateParams();
     
     AudioBuffer<float> bypassBuffer;
     
