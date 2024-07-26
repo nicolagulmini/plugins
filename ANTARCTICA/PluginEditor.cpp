@@ -35,11 +35,6 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     
     // under sinPlot
     
-    /*
-    lowPassSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, LOWPASS_ID, lowPassSlider);
-    setCustomSliderStyle(lowPassSlider, 0, LOWPASS_NAME);
-    */
-    
     delayAmountSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYAMOUNT_ID, delayAmountSlider);
     setCustomSliderStyle(delayAmountSlider, 0, DELAYAMOUNT_NAME);
     
@@ -172,6 +167,8 @@ void ANTARCTICAAudioProcessorEditor::setCustomSliderStyle(Slider& s, int type, S
        s.setSliderStyle(Slider::SliderStyle::Rotary);
     else if (type == 1) // means Linear
         s.setSliderStyle(Slider::SliderStyle::LinearVertical);
+    
+    s.setSkewFactor(0.5);
 
     s.setTextBoxStyle(Slider::TextEntryBoxPosition::NoTextBox, true, 50, 20);
     addAndMakeVisible(&s);
@@ -203,7 +200,6 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     drawTextSlider(bitSlider);
     drawTextSlider(downSampleSlider);
     drawTextSlider(drywetSlider);
-    //drawTextSlider(lowPassSlider);
     drawTextSlider(delayAmountSlider);
     drawTextSlider(delayTimeSlider);
     drawTextSlider(rndDurationSlider);
@@ -284,7 +280,6 @@ void ANTARCTICAAudioProcessorEditor::resized()
     downSampleSlider.setBounds(distSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     bitSlider.setBounds(downSampleSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     drywetSlider.setBounds(bitSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    //lowPassSlider.setBounds(sliderWidth+knobsMargin, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     delayAmountSlider.setBounds(sliderWidth+knobsMargin, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     delayTimeSlider.setBounds(delayAmountSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
     rndIntervalSlider.setBounds(delayTimeSlider.getX()+knobsDim+knobsMargin*2+50, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
