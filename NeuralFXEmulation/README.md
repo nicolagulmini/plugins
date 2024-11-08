@@ -7,9 +7,3 @@ You can find some samples in wav folder (clean = dry, effect = wet):
 - harmonic: make a guitar sounds like every note is a natural harmonic
 - dirty_rec: make a dirty rec from a device in a noisy room sounds like an amp
 - gtr_crusher: make a guitar sounds like my plugin
-
-
-(I save here some useful readings:
-- https://andrew.gibiansky.com/streaming-audio-synthesis/
-- 
-)
