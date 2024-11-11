@@ -82,10 +82,6 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     //reverseButton.setState(Button::ButtonState(1));
     //flutterButton.setState(Button::ButtonState(1));
     
-    // sin plot
-    sinPlot.setName("sin plot");
-    addAndMakeVisible(sinPlot);
-    
     setSize (1000, 700);
 }
 
@@ -103,32 +99,15 @@ ANTARCTICAAudioProcessorEditor::~ANTARCTICAAudioProcessorEditor()
 
 void ANTARCTICAAudioProcessorEditor::parameterChanged(const juce::String& parameterID, float newValue)
 {
-    // sliders
-    
-    if (parameterID == DWNSMP_ID)
-        sinPlot.setDownSampleValue(newValue);
-    else if (parameterID == BIT_ID)
-        sinPlot.setBit(int(newValue));
-    else if (parameterID == DRYWET_ID)
-        sinPlot.setPercentageDryWet(newValue/100);
-    
     // buttons
-    else if (parameterID == GAIN_BTN_ID)
+    if (parameterID == GAIN_BTN_ID)
         gainSlider.setEnabled(gainButton.getToggleState());
     else if (parameterID == DRIVE_BTN_ID)
         distSlider.setEnabled(distButton.getToggleState());
     else if (parameterID == BIT_BTN_ID)
-    {
         bitSlider.setEnabled(crushButton.getToggleState());
-        //sinPlot.setIsBitCrushing(crushButton.getToggleState());
-        sinPlot.setIsBitCrushing(newValue);
-    }
     else if (parameterID == DWNSMP_BTN_ID)
-    {
         downSampleSlider.setEnabled(downSampleButton.getToggleState());
-        //sinPlot.setIsDownSampling(downSampleButton.getToggleState());
-        sinPlot.setIsDownSampling(newValue);
-    }
     else if (parameterID == TAIL_BTN_ID)
     {
         delayAmountSlider.setEnabled(tailButton.getToggleState());
@@ -141,15 +120,6 @@ void ANTARCTICAAudioProcessorEditor::parameterChanged(const juce::String& parame
         rndIntervalSlider.setEnabled(randomButton.getToggleState());
         rndDurationSlider.setEnabled(randomButton.getToggleState());
     }
-}
-
-void ANTARCTICAAudioProcessorEditor::updateSinPlot()
-{
-    sinPlot.setDownSampleValue(audioProcessor.treeState.getRawParameterValue(DWNSMP_ID)->load());
-    sinPlot.setBit(int(audioProcessor.treeState.getRawParameterValue(BIT_ID)->load()));
-    sinPlot.setPercentageDryWet(audioProcessor.treeState.getRawParameterValue(DRYWET_ID)->load()/100);
-    sinPlot.setIsBitCrushing(crushButton.getToggleState());
-    sinPlot.setIsDownSampling(downSampleButton.getToggleState());
 }
 
 void ANTARCTICAAudioProcessorEditor::setCustomButtonStyle(Button& b, String name, String id)
@@ -234,28 +204,6 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     //drawTextButton(bypassButton);
     drawTextButton(flutterButton);
     drawTextButton(reverseButton);
-        
-    g.setColour(Colours::white);
-    g.setOpacity(0.2);
-    g.fillRoundedRectangle(inputSlider.getX()+inputSlider.getWidth()/2-1, 200-1, getWidth()-outputSlider.getWidth()+1, 300+1, 10);
-
-    g.setColour(Colours::black);
-    g.setOpacity(0.1);
-    g.drawVerticalLine(inputSlider.getX()+inputSlider.getWidth()/2-1+190, 200, 500);
-    g.drawVerticalLine(inputSlider.getX()+inputSlider.getWidth()/2-1+190*2, 200, 500);
-    g.drawVerticalLine(inputSlider.getX()+inputSlider.getWidth()/2-1+190*3, 200, 500);
-    g.drawVerticalLine(inputSlider.getX()+inputSlider.getWidth()/2-1+190*4, 200, 500);
-    
-    g.drawHorizontalLine(199+60, inputSlider.getX()+inputSlider.getWidth()/2-1, inputSlider.getX()-inputSlider.getWidth()/2+getWidth());
-    g.drawHorizontalLine(199+60*2, inputSlider.getX()+inputSlider.getWidth()/2-1, inputSlider.getX()-inputSlider.getWidth()/2+getWidth());
-    g.drawHorizontalLine(199+60*3, inputSlider.getX()+inputSlider.getWidth()/2-1, inputSlider.getX()-inputSlider.getWidth()/2+getWidth());
-    g.drawHorizontalLine(199+60*4, inputSlider.getX()+inputSlider.getWidth()/2-1, inputSlider.getX()-inputSlider.getWidth()/2+getWidth());
-    
-    g.setColour(Colours::black);
-    g.setOpacity(1);
-    g.drawRoundedRectangle(inputSlider.getX()+inputSlider.getWidth()/2-1, 200-1, getWidth()-outputSlider.getWidth()+1, 300+1, 10, 3);
-    
-    updateSinPlot();
 }
 
 void ANTARCTICAAudioProcessorEditor::resized()
@@ -270,8 +218,6 @@ void ANTARCTICAAudioProcessorEditor::resized()
     int knobsDim = 120;
     int knobsMargin = 30;
     
-    int sinPlotMargin = 500;
-    
     // x, y, w, h
     
     // knobs
@@ -280,10 +226,10 @@ void ANTARCTICAAudioProcessorEditor::resized()
     downSampleSlider.setBounds(distSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     bitSlider.setBounds(downSampleSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
     drywetSlider.setBounds(bitSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    delayAmountSlider.setBounds(sliderWidth+knobsMargin, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
-    delayTimeSlider.setBounds(delayAmountSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
-    rndIntervalSlider.setBounds(delayTimeSlider.getX()+knobsDim+knobsMargin*2+50, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
-    rndDurationSlider.setBounds(rndIntervalSlider.getX()+knobsDim+knobsMargin*2, sinPlotMargin+knobsMargin, knobsDim, knobsDim);
+    delayAmountSlider.setBounds(sliderWidth+knobsMargin, knobsDim+knobsMargin+knobsMargin, knobsDim, knobsDim);
+    delayTimeSlider.setBounds(delayAmountSlider.getX()+knobsDim+knobsMargin*2, knobsDim+knobsMargin+knobsMargin, knobsDim, knobsDim);
+    rndIntervalSlider.setBounds(delayTimeSlider.getX()+knobsDim+knobsMargin*2+50, knobsDim+knobsMargin+knobsMargin, knobsDim, knobsDim);
+    rndDurationSlider.setBounds(rndIntervalSlider.getX()+knobsDim+knobsMargin*2, knobsDim+knobsMargin+knobsMargin, knobsDim, knobsDim);
     
     // vertical sliders
     inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
@@ -301,8 +247,4 @@ void ANTARCTICAAudioProcessorEditor::resized()
     reverseButton.setBounds(delayTimeSlider.getX()+knobsDim-dimSwitcher/2, delayTimeSlider.getY()-dimSwitcher/2, dimSwitcher, dimSwitcher);
     
     bypassButton.setBounds(900, 600, dimSwitcher, dimSwitcher);
-    
-    sinPlot.setBounds(inputSlider.getX()+inputSlider.getWidth()/2, 200, getWidth()-outputSlider.getWidth(), 300);
-    
-    updateSinPlot();
 }

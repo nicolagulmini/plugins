@@ -79,10 +79,7 @@ public:
     AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     
 private:
-    
-    // DEPRECATED
-    //void updateParam(float& localParam, String ID_PARAM, String ID_BTN="", float velocity=1);
-    
+        
     void updateParams();
     
     AudioBuffer<float> bypassBuffer;

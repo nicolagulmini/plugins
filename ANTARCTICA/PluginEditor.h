@@ -5,7 +5,6 @@
 #include <BinaryData.h>
 #include "pearlSlider.h"
 #include "RedSwitcher.h"
-#include "SinPlot.h"
 
 #define GAIN_ID             "gain"
 #define GAIN_NAME           "Gain"
@@ -21,8 +20,6 @@
 #define INPUT_NAME          "Input"
 #define OUTPUT_ID           "output"
 #define OUTPUT_NAME         "Output"
-//#define LOWPASS_ID          "lowpass"
-//#define LOWPASS_NAME        "LowPass"
 #define DELAYAMOUNT_ID      "delayamount"
 #define DELAYAMOUNT_NAME    "Tail Amount"
 #define DELAYTIME_ID        "delaytime"
@@ -79,8 +76,6 @@ private:
     pearlSlider downSampleSlider;
     pearlSlider drywetSlider;
     
-    //pearlSlider lowPassSlider;
-    
     pearlSlider delayAmountSlider;
     pearlSlider delayTimeSlider;
     
@@ -100,8 +95,6 @@ private:
     RedSwitcher reverseButton;
     RedSwitcher tailButton;
     
-    SinPlot sinPlot;
-    
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     ANTARCTICAAudioProcessor& audioProcessor;
@@ -109,8 +102,6 @@ private:
 public:
     
     void parameterChanged(const juce::String& parameterID, float newValue) override;
-    
-    void updateSinPlot();
     
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> gainSliderValue;
     std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> distSliderValue;
