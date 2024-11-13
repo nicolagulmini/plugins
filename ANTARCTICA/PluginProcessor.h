@@ -5,9 +5,6 @@
 using juce::Decibels;
 using juce::AudioVisualiserComponent;
 
-//==============================================================================
-/**
-*/
 class ANTARCTICAAudioProcessor  : public juce::AudioProcessor
                             #if JucePlugin_Enable_ARA
                              , public juce::AudioProcessorARAExtension
@@ -26,6 +23,11 @@ private:
     float local_output              {1.0f};
     float local_delayTime           {100.0f};    // in ms
     float local_delayAmount         {0.5f};
+    float local_clipper             {1.0f};
+    float local_saturation          {0.0f};
+    float local_fadein              {1.0f};
+    float local_fadeout             {1.0f};
+    float local_antialiasing        {1.0f};
     
     float local_rnd_interval        {500.0f};   // in ms
     float local_rnd_duration        {500.0f};   // in ms
@@ -85,7 +87,6 @@ private:
     AudioBuffer<float> bypassBuffer;
     
     // delay section
-    
     void fillBuffer (AudioBuffer<float>& buffer, int channel, bool alternate=false);
     void readFromBuffer (AudioBuffer<float>& buffer, int channel);
     void updateBufferPositions(AudioBuffer<float>& buffer);

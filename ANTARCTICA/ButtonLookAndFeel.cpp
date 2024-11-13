@@ -1,13 +1,3 @@
-/*
-  ==============================================================================
-
-    ButtonLookAndFeel.cpp
-    Created: 14 Feb 2024 10:35:39pm
-    Author:  Nicola Gulmini
-
-  ==============================================================================
-*/
-
 #include <JuceHeader.h>
 #include "ButtonLookAndFeel.h"
 

@@ -57,6 +57,22 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     
     auto delayTimeParams = std::make_unique<AudioParameterFloat>(ParameterID{DELAYTIME_ID,1}, DELAYTIME_NAME, 50.0f, 800.0f, local_delayTime);
     params.push_back(std::move(delayTimeParams));
+    
+    // still unused
+    auto clipperParams = std::make_unique<AudioParameterFloat>(ParameterID{CLIPPER_ID,1}, CLIPPER_NAME, 0.0f, 1.0f, local_clipper);
+    params.push_back(std::move(clipperParams));
+    
+    auto saturationParams = std::make_unique<AudioParameterFloat>(ParameterID{SATURATION_ID,1}, SATURATION_NAME, 0.0f, 1.0f, local_saturation);
+    params.push_back(std::move(saturationParams));
+    
+    auto fadeinParams = std::make_unique<AudioParameterFloat>(ParameterID{FADEIN_ID,1}, FADEIN_NAME, 0.0f, 1.0f, local_fadein);
+    params.push_back(std::move(fadeinParams));
+    
+    auto fadeoutParams = std::make_unique<AudioParameterFloat>(ParameterID{FADEOUT_ID,1}, FADEOUT_NAME, 0.0f, 1.0f, local_fadeout);
+    params.push_back(std::move(fadeoutParams));
+    
+    auto antialiasingParams = std::make_unique<AudioParameterFloat>(ParameterID{ANTIALIASING_ID,1}, ANTIALIASING_NAME, 0.0f, 1.0f, local_antialiasing);
+    params.push_back(std::move(antialiasingParams));
 
     
     // buttons
@@ -86,6 +102,12 @@ AudioProcessorValueTreeState::ParameterLayout ANTARCTICAAudioProcessor::createPa
     
     auto tailButtonParams = std::make_unique<AudioParameterBool>(ParameterID{TAIL_BTN_ID,1}, TAIL_BTN_NAME, false);
     params.push_back(std::move(tailButtonParams));
+    
+    auto fadeButtonParams = std::make_unique<AudioParameterBool>(ParameterID{FADE_TYPE_BTN_ID,1}, FADE_TYPE_BTN_NAME, false);
+    params.push_back(std::move(fadeButtonParams));
+    
+    auto gainMatchingButtonParams = std::make_unique<AudioParameterBool>(ParameterID{GAIN_MATCHING_BTN_ID,1}, GAIN_MATCHING_BTN_NAME, false);
+    params.push_back(std::move(gainMatchingButtonParams));
 
     // return vector
     return {params.begin(), params.end()};
@@ -193,24 +215,6 @@ bool ANTARCTICAAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 }
 #endif
 
-/* DEPRECATED: performance issues
-void ANTARCTICAAudioProcessor::updateParam(float& localParam, String ID_PARAM, String ID_BTN, float velocity)
-{ // let's suppose that ID_PARAM and ID_BTN exist...
-    // smooth update
-    float treeStateParam = treeState.getRawParameterValue(ID_PARAM)->load();
-    
-    if(ID_BTN.length()>0 && !treeState.getRawParameterValue(ID_BTN)->load())
-        treeStateParam = 0; // not default, just to prevent sharpness
-    
-    if (abs(localParam-treeStateParam) < EPSILON*velocity)
-        localParam = treeStateParam;
-    else if (localParam > treeStateParam)
-        localParam -= EPSILON*velocity;
-    else
-        localParam += EPSILON*velocity;
-}
- */
-
 void ANTARCTICAAudioProcessor::updateParams()
 {
     local_gain          = treeState.getRawParameterValue(GAIN_ID)->load();
@@ -224,6 +228,8 @@ void ANTARCTICAAudioProcessor::updateParams()
     local_delayAmount   = treeState.getRawParameterValue(DELAYAMOUNT_ID)->load();
     local_rnd_duration  = treeState.getRawParameterValue(RND_DURATION_ID)->load();
     local_rnd_interval  = treeState.getRawParameterValue(RND_INTERVAL_ID)->load();
+    local_saturation    = treeState.getRawParameterValue(SATURATION_ID)->load();
+    local_clipper       = treeState.getRawParameterValue(CLIPPER_ID)->load();
 }
 
 void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -241,7 +247,7 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         previousPlayHeadState = playhead->getPosition()->getIsPlaying();
     }
     
-    bypassBuffer.makeCopyOf(buffer, false);
+    
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
@@ -249,6 +255,9 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     if (!treeState.getRawParameterValue(BYPASS_BTN_ID)->load())
     {
         updateParams();
+        
+        buffer.applyGain(local_input);
+        bypassBuffer.makeCopyOf(buffer, false); // which is AFTER applying the input
         
         if(treeState.getRawParameterValue(RANDOM_BTN_ID)->load())
         {
@@ -266,6 +275,9 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
                 rndIsInterval = true;
             }
         }
+        
+        float originalRMS = 0;
+        float processedRMS = 0;
         
         for (int channel = 0; channel < totalNumInputChannels; ++channel)
         {
@@ -290,25 +302,27 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             }
             
             auto* channelData = buffer.getWritePointer (channel);
-
+            
             for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
             {
                 float toProcessVal, finalVal;
                 
-                //updateParam(local_input, INPUT_ID);
-                channelData[sample] *= local_input;
-                
                 toProcessVal = finalVal = channelData[sample];
+                originalRMS += pow(toProcessVal, 2);
             
-                //updateParam(local_gain, GAIN_ID, GAIN_BTN_ID);
                 if (treeState.getRawParameterValue(GAIN_BTN_ID)->load())
                     toProcessVal *= Decibels::decibelsToGain(local_gain);
                 
-                //updateParam(local_drive, DRIVE_ID, DRIVE_BTN_ID);
+                float saturationAmount = 4.0f; // quiet high
+                toProcessVal = toProcessVal * (1.0f + saturationAmount*local_saturation) / (1.0f + saturationAmount * local_saturation * abs(toProcessVal));
+                
                 if (treeState.getRawParameterValue(DRIVE_BTN_ID)->load())
                     toProcessVal = tanh(local_drive * toProcessVal);
                 
-                //updateParam(local_dwnsmp, DWNSMP_ID, DWNSMP_BTN_ID);
+                // to verify
+                toProcessVal = jmin(toProcessVal, local_clipper);
+                toProcessVal = jmax(toProcessVal, -local_clipper);
+                
                 if (treeState.getRawParameterValue(DWNSMP_BTN_ID)->load())
                 {
                     int step = int(buffer.getNumSamples()*(pow(1.08, local_dwnsmp)/100-0.01));
@@ -320,19 +334,16 @@ void ANTARCTICAAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
                     }
                 }
                 
-                //updateParam(local_bit, BIT_ID, BIT_BTN_ID);
                 if (treeState.getRawParameterValue(BIT_BTN_ID)->load())
                     toProcessVal -= fmodf(toProcessVal, pow(2, -(pow(1.1117,32-local_bit)+1)));
                 
-                // lil saturation (not parametrized)
-                float saturationAmount = 2.0f;
-                finalVal = toProcessVal * (1.0f + saturationAmount) / (1.0f + saturationAmount * abs(toProcessVal));
-                
+                finalVal = toProcessVal;
+                processedRMS += pow(toProcessVal, 2);
                 channelData[sample] = finalVal;
             }
         }
-
-        buffer.applyGain(local_drywet/100);
+        float gainMatchingFactor = sqrt(originalRMS / processedRMS);
+        buffer.applyGain(gainMatchingFactor*local_drywet/100);
         for (int channel = 0; channel < totalNumInputChannels; ++channel)
             buffer.addFrom(channel, 0, bypassBuffer, channel, 0, buffer.getNumSamples(), 1-local_drywet/100);
         

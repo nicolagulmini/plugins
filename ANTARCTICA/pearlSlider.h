@@ -1,21 +1,8 @@
-/*
-  ==============================================================================
-
-    pearlSlider.h
-    Created: 13 Feb 2024 3:32:04pm
-    Author:  Nicola Gulmini
-
-  ==============================================================================
-*/
-
 #pragma once
 
 #include <JuceHeader.h>
 #include "pearlSliderLookAndFeel.h"
 
-//==============================================================================
-/*
-*/
 class pearlSlider  : public juce::Slider
 {
 public:

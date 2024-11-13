@@ -1,53 +1,42 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-//==============================================================================
 ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    // treeState
     
-    gainSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, GAIN_ID, gainSlider);
-    setCustomSliderStyle(gainSlider, 0, GAIN_NAME);
-
-    distSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DRIVE_ID, distSlider);
-    setCustomSliderStyle(distSlider, 0, DRIVE_NAME);
-    //distSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxAbove, false, 80, 20);
+    // lambda sliders
+    auto configureSlider = [this](String ID, String NAME, pearlSlider& slider, bool listener, int style) {
+        auto sliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, ID, slider);
+        setCustomSliderStyle(slider, style, NAME);
+        if (listener) audioProcessor.treeState.addParameterListener(ID, this);
+        return sliderValue;
+    };
     
-    bitSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, BIT_ID, bitSlider);
-    setCustomSliderStyle(bitSlider, 0, BIT_NAME);
-    audioProcessor.treeState.addParameterListener(BIT_ID, this);
+    gainSliderValue = configureSlider(GAIN_ID, GAIN_NAME, gainSlider, false, 2);
     
-    downSampleSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DWNSMP_ID, downSampleSlider);
-    setCustomSliderStyle(downSampleSlider, 0, DWNSMP_NAME);
-    audioProcessor.treeState.addParameterListener(DWNSMP_ID, this);
+    clipperSliderValue = configureSlider(CLIPPER_ID, CLIPPER_NAME, clipperSlider, false, 2);
+    saturationSliderValue = configureSlider(SATURATION_ID, SATURATION_NAME, saturationSlider, false, 2);
+    distSliderValue = configureSlider(DRIVE_ID, DRIVE_NAME, distSlider, false, 2);
+    bitSliderValue = configureSlider(BIT_ID, BIT_NAME, bitSlider, true, 2);
+    downSampleSliderValue = configureSlider(DWNSMP_ID, DWNSMP_NAME, downSampleSlider, true, 2);
     
-    drywetSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DRYWET_ID, drywetSlider);
-    setCustomSliderStyle(drywetSlider, 0, DRYWET_NAME);
-    audioProcessor.treeState.addParameterListener(DRYWET_ID, this);
+    drywetSliderValue = configureSlider(DRYWET_ID, DRYWET_NAME, drywetSlider, true, 2);
+    antialiasingSliderValue = configureSlider(ANTIALIASING_ID, ANTIALIASING_NAME, antialiasingSlider, false, 2);
+    inputSliderValue = configureSlider(INPUT_ID, INPUT_NAME, inputSlider, false, 1);
+    outputSliderValue = configureSlider(OUTPUT_ID, OUTPUT_NAME, outputSlider, false, 1);
     
-    // linear vertical
-    inputSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, INPUT_ID, inputSlider);
-    setCustomSliderStyle(inputSlider, 1, INPUT_NAME);
+    delayAmountSliderValue = configureSlider(DELAYAMOUNT_ID, DELAYAMOUNT_NAME, delayAmountSlider, false, 2);
+    delayTimeSliderValue = configureSlider(DELAYTIME_ID, DELAYTIME_NAME, delayTimeSlider, false, 2);
+    fadeinSliderValue = configureSlider(FADEIN_ID, FADEIN_NAME, fadeinSlider, false, 2);
+    fadeoutSliderValue = configureSlider(FADEOUT_ID, FADEOUT_NAME, fadeoutSlider, false, 2);
     
-    outputSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, OUTPUT_ID, outputSlider);
-    setCustomSliderStyle(outputSlider, 1, OUTPUT_NAME);
+    rndIntervalSliderValue = configureSlider(RND_INTERVAL_ID, RND_INTERVAL_NAME, rndIntervalSlider, false, 2);
     
-    // under sinPlot
+    rndDurationSliderValue = configureSlider(RND_DURATION_ID, RND_DURATION_NAME, rndDurationSlider, false, 2);
     
-    delayAmountSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYAMOUNT_ID, delayAmountSlider);
-    setCustomSliderStyle(delayAmountSlider, 0, DELAYAMOUNT_NAME);
     
-    delayTimeSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, DELAYTIME_ID, delayTimeSlider);
-    setCustomSliderStyle(delayTimeSlider, 0, DELAYTIME_NAME);
-    
-    rndIntervalSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, RND_INTERVAL_ID, rndIntervalSlider);
-    setCustomSliderStyle(rndIntervalSlider, 0, RND_INTERVAL_NAME);
-    
-    rndDurationSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(audioProcessor.treeState, RND_DURATION_ID, rndDurationSlider);
-    setCustomSliderStyle(rndDurationSlider, 0, RND_DURATION_NAME);
-    
-    // buttons
+    // lambda buttons
     auto configureButton = [this](String ID, String NAME, RedSwitcher& button) {
         auto attachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(audioProcessor.treeState, ID, button);
         setCustomButtonStyle(button, NAME, ID);
@@ -79,10 +68,8 @@ ANTARCTICAAudioProcessorEditor::ANTARCTICAAudioProcessorEditor (ANTARCTICAAudioP
     
     flutterButtonValue = configureButton(FLUTTER_BTN_ID, FLUTTER_BTN_NAME, flutterButton);
     reverseButtonValue = configureButton(REV_BTN_ID, REV_BTN_NAME, reverseButton);
-    //reverseButton.setState(Button::ButtonState(1));
-    //flutterButton.setState(Button::ButtonState(1));
     
-    setSize (1000, 700);
+    setSize (1000, 600);
 }
 
 ANTARCTICAAudioProcessorEditor::~ANTARCTICAAudioProcessorEditor()
@@ -112,8 +99,6 @@ void ANTARCTICAAudioProcessorEditor::parameterChanged(const juce::String& parame
     {
         delayAmountSlider.setEnabled(tailButton.getToggleState());
         delayTimeSlider.setEnabled(tailButton.getToggleState());
-        //reverseButton.setClickingTogglesState(tailButton.getToggleState());
-        //flutterButton.setClickingTogglesState(tailButton.getToggleState());
     }
     else if (parameterID == RANDOM_BTN_ID)
     {
@@ -135,8 +120,10 @@ void ANTARCTICAAudioProcessorEditor::setCustomSliderStyle(Slider& s, int type, S
     
    if (type == 0) // means Rotary
        s.setSliderStyle(Slider::SliderStyle::Rotary);
-    else if (type == 1) // means Linear
+    else if (type == 1) // Linear Vertical
         s.setSliderStyle(Slider::SliderStyle::LinearVertical);
+    else if (type == 2) // Linear Horizontal
+        s.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
     
     s.setSkewFactor(0.5);
 
@@ -152,46 +139,53 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
     
     g.setColour(Colours::black);
     
-    int wText = 100;
+    int wText = 120;
     int hText = 20;
     
-    auto drawTextSlider = [wText, hText, &g](Slider& s) {
-        g.drawText(s.getName(),
+    
+    
+    auto drawTextSlider = [wText, hText, &g](Slider& s, int style) {
+        if (style == 0) // means rotary
+            g.drawText(s.getName(),
                    s.getX() + s.getWidth()/2 - wText/2,
                    s.getY() + s.getHeight() + 10,
                    wText,
                    hText,
                    Justification::centred);
+        else if (style == 1) // means linear vertical
+            g.drawText(s.getName(),
+                       s.getX() + s.getWidth()/2 - wText/2,
+                       s.getY() + s.getHeight() - hText/2 + 10,
+                       wText,
+                       hText,
+                       Justification::centred);
+        else if (style == 2) // means linear horizontal
+            g.drawText(s.getName(),
+                       s.getX() + s.getWidth(), // -30?
+                       s.getY() + s.getHeight()/2 - hText/2,
+                       wText,
+                       hText,
+                       Justification::centred);
     };
     
     // knobs
-    drawTextSlider(gainSlider);
-    drawTextSlider(distSlider);
-    drawTextSlider(bitSlider);
-    drawTextSlider(downSampleSlider);
-    drawTextSlider(drywetSlider);
-    drawTextSlider(delayAmountSlider);
-    drawTextSlider(delayTimeSlider);
-    drawTextSlider(rndDurationSlider);
-    drawTextSlider(rndIntervalSlider);
-
+    drawTextSlider(gainSlider, 2);
+    drawTextSlider(saturationSlider, 2);
+    drawTextSlider(distSlider, 2);
+    drawTextSlider(clipperSlider, 2);
+    drawTextSlider(bitSlider, 2);
+    drawTextSlider(downSampleSlider, 2);
+    drawTextSlider(drywetSlider, 2);
+    drawTextSlider(delayAmountSlider, 2);
+    drawTextSlider(delayTimeSlider, 2);
+    drawTextSlider(rndDurationSlider, 2);
+    drawTextSlider(rndIntervalSlider, 2);
     
     // vertical sliders
-    g.drawText(inputSlider.getName(),
-               inputSlider.getX() + inputSlider.getWidth()/2 - wText/2,
-               inputSlider.getY() + inputSlider.getHeight() - hText/2 + 10,
-               wText,
-               hText,
-               Justification::centred);
+    //drawTextSlider(inputSlider, 1);
+    //drawTextSlider(outputSlider, 1);
     
-    g.drawText(outputSlider.getName(),
-               outputSlider.getX() + outputSlider.getWidth()/2 - wText/2,
-               outputSlider.getY() + outputSlider.getHeight() - hText/2 + 10,
-               wText,
-               hText,
-               Justification::centred);
-    
-    // buttons
+    // buttons // to generalize
     auto drawTextButton = [wText, hText, &g](Button& b) {
         g.drawText(b.getName(),
                    b.getX() + b.getWidth(),
@@ -201,50 +195,69 @@ void ANTARCTICAAudioProcessorEditor::paint (juce::Graphics& g)
                    Justification::centred);
     };
     
-    //drawTextButton(bypassButton);
+    // buttons
     drawTextButton(flutterButton);
     drawTextButton(reverseButton);
+    
+    
 }
 
 void ANTARCTICAAudioProcessorEditor::resized()
 {
-    // dimensions
-    
-    int dimSwitcher = 25;
-    
-    int sliderWidth = 50;
-    int sliderHeight = 160;
-    
-    int knobsDim = 120;
-    int knobsMargin = 30;
-    
     // x, y, w, h
     
-    // knobs
-    gainSlider.setBounds(sliderWidth+knobsMargin, 0+knobsMargin, knobsDim, knobsDim);
-    distSlider.setBounds(gainSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    downSampleSlider.setBounds(distSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    bitSlider.setBounds(downSampleSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    drywetSlider.setBounds(bitSlider.getX()+knobsDim+knobsMargin*2, 0+knobsMargin, knobsDim, knobsDim);
-    delayAmountSlider.setBounds(sliderWidth+knobsMargin, knobsDim+knobsMargin+knobsMargin, knobsDim, knobsDim);
-    delayTimeSlider.setBounds(delayAmountSlider.getX()+knobsDim+knobsMargin*2, knobsDim+knobsMargin+knobsMargin, knobsDim, knobsDim);
-    rndIntervalSlider.setBounds(delayTimeSlider.getX()+knobsDim+knobsMargin*2+50, knobsDim+knobsMargin+knobsMargin, knobsDim, knobsDim);
-    rndDurationSlider.setBounds(rndIntervalSlider.getX()+knobsDim+knobsMargin*2, knobsDim+knobsMargin+knobsMargin, knobsDim, knobsDim);
+    int horizontalSliderWidth = 320;
+    int horizontalSliderHeight = 50;
+    int verticalSliderWidth = 50;
+    int verticalSliderHeight = 160;
+    
+    int knobsDim = 120;
+    int switcherDim = 25;
+    
+    int buttonLeftMargin = 50;
+    int sliderLeftMargin = 100;
+    int interComponentTextMargin = 100;
+    int interComponentMargin = 30;
+    
+    
+    // horizontal sliders
+    gainSlider.setBounds(verticalSliderWidth+sliderLeftMargin, 0, horizontalSliderWidth, horizontalSliderHeight);
+    saturationSlider.setBounds(verticalSliderWidth+sliderLeftMargin, horizontalSliderHeight*1, horizontalSliderWidth, horizontalSliderHeight);
+    distSlider.setBounds(verticalSliderWidth+sliderLeftMargin, horizontalSliderHeight*2, horizontalSliderWidth, horizontalSliderHeight);
+    clipperSlider.setBounds(verticalSliderWidth+sliderLeftMargin, horizontalSliderHeight*3, horizontalSliderWidth, horizontalSliderHeight);
+    downSampleSlider.setBounds(verticalSliderWidth+sliderLeftMargin, horizontalSliderHeight*4, horizontalSliderWidth, horizontalSliderHeight);
+    bitSlider.setBounds(verticalSliderWidth+sliderLeftMargin, horizontalSliderHeight*5, horizontalSliderWidth, horizontalSliderHeight);
+    
+    delayAmountSlider.setBounds(verticalSliderWidth+sliderLeftMargin, horizontalSliderHeight*6, horizontalSliderWidth, horizontalSliderHeight);
+    delayTimeSlider.setBounds(verticalSliderWidth+sliderLeftMargin, horizontalSliderHeight*7, horizontalSliderWidth, horizontalSliderHeight);
+    
+    rndIntervalSlider.setBounds(verticalSliderWidth+sliderLeftMargin, horizontalSliderHeight*8, horizontalSliderWidth, horizontalSliderHeight);
+    rndDurationSlider.setBounds(verticalSliderWidth+sliderLeftMargin, horizontalSliderHeight*9, horizontalSliderWidth, horizontalSliderHeight);
+
+    drywetSlider.setBounds(verticalSliderWidth+sliderLeftMargin, horizontalSliderHeight*10, horizontalSliderWidth, horizontalSliderHeight);
+
+    // left switchers
+    gainButton.setBounds(gainSlider.getX()-switcherDim-interComponentMargin, gainSlider.getY()+switcherDim/2, switcherDim, switcherDim);
+    
+    distButton.setBounds(distSlider.getX()-switcherDim-interComponentMargin, distSlider.getY()+switcherDim/2, switcherDim, switcherDim);
+    downSampleButton.setBounds(downSampleSlider.getX()-switcherDim-interComponentMargin, downSampleSlider.getY()+switcherDim/2, switcherDim, switcherDim);
+    crushButton.setBounds(bitSlider.getX()-switcherDim-interComponentMargin, bitSlider.getY()+switcherDim/2, switcherDim, switcherDim);
+    
+    tailButton.setBounds(delayAmountSlider.getX()-switcherDim-interComponentMargin, (delayAmountSlider.getY()+delayTimeSlider.getY())/2+switcherDim/2, switcherDim, switcherDim); // between the two delay sliders
+    randomButton.setBounds(rndIntervalSlider.getX()-switcherDim-interComponentMargin, (rndIntervalSlider.getY()+rndDurationSlider.getY())/2+switcherDim/2, switcherDim, switcherDim); // same
+    
+    // right switchers
+    flutterButton.setBounds(delayAmountSlider.getX()+horizontalSliderWidth+interComponentMargin+interComponentTextMargin, tailButton.getY(), switcherDim, switcherDim);
+    reverseButton.setBounds(delayAmountSlider.getX()+horizontalSliderWidth+interComponentMargin*2+switcherDim+interComponentTextMargin*2, tailButton.getY(), switcherDim, switcherDim);
+    
+    // only switchers section
+    bypassButton.setBounds(verticalSliderWidth+buttonLeftMargin, 550, switcherDim, switcherDim);
+    
+    /*
     
     // vertical sliders
     inputSlider.setBounds(0, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     outputSlider.setBounds(drywetSlider.getX()+knobsDim+knobsMargin, 0+knobsMargin, sliderWidth, sliderHeight-knobsMargin);
     
-    // buttons
-    gainButton.setBounds(gainSlider.getX()+knobsDim-dimSwitcher/2, gainSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    distButton.setBounds(distSlider.getX()+knobsDim-dimSwitcher/2, distSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    downSampleButton.setBounds(downSampleSlider.getX()+knobsDim-dimSwitcher/2, downSampleSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    crushButton.setBounds(bitSlider.getX()+knobsDim-dimSwitcher/2, bitSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    tailButton.setBounds(delayAmountSlider.getX()+knobsDim-dimSwitcher/2, delayAmountSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    randomButton.setBounds(rndIntervalSlider.getX()+knobsDim-dimSwitcher/2, rndIntervalSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    
-    flutterButton.setBounds(delayTimeSlider.getX()+knobsDim-dimSwitcher/2, delayTimeSlider.getY()+knobsDim-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    reverseButton.setBounds(delayTimeSlider.getX()+knobsDim-dimSwitcher/2, delayTimeSlider.getY()-dimSwitcher/2, dimSwitcher, dimSwitcher);
-    
-    bypassButton.setBounds(900, 600, dimSwitcher, dimSwitcher);
+    */
 }
